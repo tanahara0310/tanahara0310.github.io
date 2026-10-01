@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#050B10">
 <meta property="og:type" content="website">
 <meta property="og:title" content="棚原 誇亜 | Portfolio">
-<meta property="og:description" content="大好きな故郷、沖縄の海を自作ゲームエンジン（DirectX12）で再現する。">
+<meta property="og:description" content="大好きな故郷、沖縄の海を自作ゲームエンジン（DirectX12）で再現する。棚原 誇亜のポートフォリオ。">
 <meta property="og:url" content="https://tanahara0310.github.io/">
 <meta property="og:image" content="https://tanahara0310.github.io/assets/img/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -19,15 +19,15 @@
 <link rel="stylesheet" href="css/style.css">
 <script>document.documentElement.classList.add('js');</script>
 </head>
-<body>
+<body data-depth="1.2,20">
 <canvas id="ocean" aria-hidden="true"></canvas>
 <div class="sea-fallback" aria-hidden="true"></div>
 
 <header class="site-header">
   <a class="logo" href="#top">KOA TANAHARA</a>
-  <nav class="site-nav" aria-label="ページ内">
+  <nav class="site-nav" aria-label="サイト内">
     <a href="#about">自己紹介</a>
-    <a href="#engine">就活作品</a>
+    <a href="works/koaengine.html">就活作品</a>
     <a href="#works">チーム作品</a>
   </nav>
 </header>
@@ -35,7 +35,7 @@
 <div class="depth" aria-hidden="true">
   <span class="depth-label">DEPTH</span>
   <div class="depth-track"><span class="depth-mark"></span></div>
-  <span class="depth-value"><b>2.4</b>m</span>
+  <span class="depth-value"><b>0.0</b>m</span>
 </div>
 
 <main>
@@ -104,164 +104,34 @@
 </section>
 
 <article class="page reveal">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要</p>
+  <p class="crumb"><span class="crumb-bar">|</span>就活作品紹介</p>
   <h3 class="band">koaEngine（自作エンジン）</h3>
-  <div class="overview">
-    <dl class="spec">
-      <div><dt>作品内容</dt><dd>ゲームエンジンデモ</dd></div>
-      <div><dt>制作人数</dt><dd>1人</dd></div>
-      <div class="wide"><dt>制作期間</dt><dd>約1年半 <em class="now">// 現在も制作中</em></dd></div>
-      <div class="wide"><dt>SDK</dt><dd>DirectX12</dd></div>
-      <div class="wide"><dt>外部ライブラリ</dt>
-        <dd><ul class="libs"><li>DirectXTex</li><li>ImGui, ImGuizmo</li><li>Assimp</li><li>nlohmann json</li></ul></dd>
-      </div>
-    </dl>
-    <div class="overview-media">
-      <figure class="shot">
-        <img src="assets/img/engine/editor.webp" srcset="assets/img/engine/editor-sm.webp 800w, assets/img/engine/editor.webp 1600w" sizes="(min-width: 900px) 560px, 100vw" width="1600" height="900" alt="自作エンジンのエディタ画面" loading="lazy" decoding="async" data-zoom>
-        <figcaption>自作エンジンのエディタ画面（1920×1080 / 60fps）</figcaption>
-      </figure>
-      <button class="video" type="button" data-yt="gtPeppsGQYw" data-title="プログラム説明動画" aria-label="プログラム説明動画を見る（YouTube）">
-        <img src="assets/img/engine/cover-sm.webp" width="800" height="450" alt="" loading="lazy" decoding="async">
-        <span class="video-play" aria-hidden="true"></span>
-        <span class="video-label"><span class="yt-bar">||</span> Youtube　プログラム説明動画を見る</span>
-      </button>
-    </div>
-  </div>
-</article>
-
-<article class="page reveal">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要 <small>/ 目標</small></p>
-  <div class="goal">
-    <p class="goal-line"><span class="goal-tag">目標：</span>沖縄の海を自作ゲームエンジンで実装</p>
-    <p class="goal-why">大好きな故郷、沖縄の海をゲームエンジンで再現したかったから</p>
-  </div>
-  <p class="row-label">目指した海（沖縄の写真）</p>
-  <div class="trio">
-    <img src="assets/img/engine/okinawa-1-sm.webp" width="800" height="534" alt="沖縄の海の写真（白い砂浜と遠浅の海）" loading="lazy" decoding="async" data-zoom>
-    <img src="assets/img/engine/okinawa-2-sm.webp" width="800" height="437" alt="沖縄の海の写真（岩場のある浜辺）" loading="lazy" decoding="async" data-zoom>
-    <img src="assets/img/engine/okinawa-3-sm.webp" width="800" height="533" alt="沖縄の海の写真（青い空と澄んだ浅瀬）" loading="lazy" decoding="async" data-zoom>
-  </div>
-  <p class="row-label is-teal">自作エンジンで再現した海</p>
-  <div class="trio">
-    <img src="assets/img/engine/recreated-1-sm.webp" width="800" height="450" alt="自作エンジンで描いた浅瀬と島" loading="lazy" decoding="async" data-zoom>
-    <img src="assets/img/engine/recreated-2-sm.webp" width="800" height="450" alt="自作エンジンで描いた沖の島" loading="lazy" decoding="async" data-zoom>
-    <img src="assets/img/engine/recreated-3-sm.webp" width="800" height="450" alt="自作エンジンで描いた岩場の浅瀬" loading="lazy" decoding="async" data-zoom>
-  </div>
-</article>
-
-<article class="page reveal">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要 <small>/ 基本レンダリング</small></p>
-  <h3 class="band">基本レンダリング</h3>
-  <div class="split">
-    <div class="split-text">
-      <h4 class="sub"><span>||</span>物理ベースレンダリング（PBR）</h4>
-      <p>海を再現するため、前提となる物理ベースレンダリングを実装しました。<br>Unreal Engine が公開している文献などを参考にしながら実装しました。</p>
-      <h4 class="sub"><span>||</span>レンダリングフロー</h4>
-      <p>水の実装にてレイトレーシングで “G-Buffer” を使用するので <mark>Deferred Rendering</mark> を実装しました。<br>ですが水は半透明のため <mark>Forward Rendering</mark> も実装し、<mark>Deferred Rendering + Forward Rendering</mark> のハイブリッド構成にしました。</p>
-    </div>
-    <figure class="split-media">
-      <img src="assets/img/engine/recreated-2.webp" srcset="assets/img/engine/recreated-2-sm.webp 800w, assets/img/engine/recreated-2.webp 1600w" sizes="(min-width: 900px) 540px, 100vw" width="1600" height="900" alt="物理ベースレンダリングで描いた沖の島" loading="lazy" decoding="async" data-zoom>
-    </figure>
-  </div>
-</article>
-
-<article class="page reveal">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要 <small>/ Water Rendering</small></p>
-  <h3 class="band">Gerstner Wave × FFT Ocean ハイブリッド水面</h3>
   <div class="split is-media-first is-wide-media">
-    <figure class="split-media">
-      <img src="assets/img/engine/fft-ocean.webp" srcset="assets/img/engine/fft-ocean-sm.webp 800w, assets/img/engine/fft-ocean.webp 1600w" sizes="(min-width: 900px) 660px, 100vw" width="1600" height="900" alt="Gerstner Wave と FFT Ocean を組み合わせた水面" loading="lazy" decoding="async" data-zoom>
-    </figure>
+    <a class="card-media" href="works/koaengine.html">
+      <img src="assets/img/engine/cover.webp" srcset="assets/img/engine/cover-sm.webp 800w, assets/img/engine/cover.webp 1600w" sizes="(min-width: 900px) 640px, 100vw" width="1600" height="900" alt="自作エンジンで描いた沖縄の海と島" loading="lazy" decoding="async">
+    </a>
     <div class="split-text">
-      <h4 class="sub"><span>||</span>波シミュレーション</h4>
-      <p>近景向けの <mark>Gerstner Wave</mark> と、大規模海面向けに GPU 上で自作した <mark>FFT Ocean</mark> を統合したハイブリッド構成を実装</p>
-    </div>
-  </div>
-  <p class="more"><span class="more-key">詳しくは → 説明資料 p7〜p8</span>なぜ FFT を選んだのか／既存の枠組みに自分で足した 3 点</p>
-</article>
-
-<article class="page reveal">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要 <small>/ Water Rendering</small></p>
-  <h3 class="band">物理ベース水面</h3>
-  <div class="stagger">
-    <figure>
-      <img src="assets/img/engine/watercolor-day-sm.webp" width="800" height="450" alt="昼の水面" loading="lazy" decoding="async" data-zoom>
-      <figcaption class="t-day">昼</figcaption>
-    </figure>
-    <figure>
-      <img src="assets/img/engine/watercolor-evening-sm.webp" width="800" height="450" alt="夕方の水面" loading="lazy" decoding="async" data-zoom>
-      <figcaption class="t-eve">夕方</figcaption>
-    </figure>
-    <figure>
-      <img src="assets/img/engine/watercolor-night-sm.webp" width="800" height="450" alt="夜の水面" loading="lazy" decoding="async" data-zoom>
-      <figcaption class="t-night">夜</figcaption>
-    </figure>
-  </div>
-  <h4 class="sub"><span>||</span>水の色</h4>
-  <p>浅瀬のエメラルドから深瀬の青への変化を、色指定ではなく <mark>水の吸収係数・散乱係数</mark> から計算で導出</p>
-  <p class="more"><span class="more-key">詳しくは → 説明資料 p9</span>色を手で塗るのをやめて、水の吸収・散乱から計算するまでの話</p>
-</article>
-
-<article class="page reveal">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要 <small>/ Water Rendering</small></p>
-  <h3 class="band">水面を光学境界面として扱う</h3>
-  <div class="split is-media-first">
-    <figure class="split-media">
-      <img src="assets/img/engine/recreated-3.webp" srcset="assets/img/engine/recreated-3-sm.webp 800w, assets/img/engine/recreated-3.webp 1600w" sizes="(min-width: 900px) 560px, 100vw" width="1600" height="900" alt="島が映り込み、海底が透けて見える浅瀬" loading="lazy" decoding="async" data-zoom>
-    </figure>
-    <div class="split-text">
-      <h4 class="sub"><span>||</span>反射・屈折・コースティクス</h4>
-      <ul class="points">
-        <li><b>反射</b>鏡像カメラによる Planar Reflection（空・雲がそのまま映る）</li>
-        <li><b>屈折</b>DXR で屈折方向にレイを飛ばし、画面外を含む水中背景を取得</li>
-        <li><b>コースティクス</b>水面の凸凹による集光を計算し、海底へ投影</li>
-      </ul>
-    </div>
-  </div>
-  <p class="more"><span class="more-key">詳しくは → 説明資料 p10〜p11・補足A（p22）</span>水面際が破綻した原因と、レイで情報を足した話</p>
-</article>
-
-<article class="page reveal">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要 <small>/ Sky Atmosphere</small></p>
-  <h3 class="band">空の色を、大気の物理から計算する</h3>
-  <div class="timeslide" style="--t: 0">
-    <div class="timeslide-view">
-      <img src="assets/img/engine/sky-day.webp" width="1600" height="900" alt="昼の空" loading="lazy" decoding="async">
-      <img src="assets/img/engine/sky-dusk.webp" width="1600" height="900" alt="夕暮れの空" loading="lazy" decoding="async">
-      <img src="assets/img/engine/sky-night.webp" width="1600" height="900" alt="夜の空（月と星）" loading="lazy" decoding="async">
-    </div>
-    <div class="timeslide-ui">
-      <input type="range" min="0" max="2" step="0.01" value="0" aria-label="時刻">
-      <div class="timeslide-ticks">
-        <button type="button" data-t="0" class="t-day">昼</button>
-        <button type="button" data-t="1" class="t-eve">夕暮れ</button>
-        <button type="button" data-t="2" class="t-night">夜（月と星）</button>
+      <p class="card-goal"><span class="goal-tag">目標：</span>沖縄の海を自作ゲームエンジンで実装</p>
+      <dl class="spec is-compact">
+        <div><dt>制作人数</dt><dd>1人</dd></div>
+        <div><dt>SDK</dt><dd>DirectX12</dd></div>
+        <div class="wide"><dt>制作期間</dt><dd>約1年半 <em class="now">// 現在も制作中</em></dd></div>
+      </dl>
+      <div class="card-actions">
+        <a class="btn" href="works/koaengine.html">作品ページを見る<span aria-hidden="true">→</span></a>
+        <button class="yt" type="button" data-yt="gtPeppsGQYw" data-title="プログラム説明動画" aria-label="プログラム説明動画を見る（YouTube）"><span class="yt-bar">||</span> Youtube<span class="yt-play" aria-hidden="true"></span>説明動画</button>
       </div>
     </div>
   </div>
-  <h4 class="sub"><span>||</span>大気散乱（Sky Atmosphere）</h4>
-  <p>空の色は、<mark>レイリー／ミー散乱とオゾン吸収の積分</mark> から生成。時刻を動かすだけで昼→夕→夜が変わります</p>
-  <p class="more is-strong"><span class="more-key">空・雲・水面・環境光を、同じ大気散乱から供給</span>時間帯ごとのアセットや個別調整は要りません</p>
-</article>
-
-<article class="page reveal">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要 <small>/ Volumetric Cloud</small></p>
-  <h3 class="band">雲は、密度を積分して描いている</h3>
-  <div class="split">
-    <div class="split-text">
-      <h4 class="sub"><span>||</span>ボリュメトリック雲</h4>
-      <ul class="points">
-        <li><b>形状</b>Perlin-Worley 128³ など 3 種のノイズを Compute Shader で手続き生成</li>
-        <li><b>光</b>球殻の雲層をレイマーチし、位相関数と多重散乱近似で内部の光を積分</li>
-        <li><b>接続</b>太陽と月の 2 光源に対応。空と雲のキューブマップが水面とモデルへ映り込む</li>
-      </ul>
-    </div>
-    <figure class="split-media">
-      <img src="assets/img/engine/cloud.webp" srcset="assets/img/engine/cloud-sm.webp 800w, assets/img/engine/cloud.webp 1600w" sizes="(min-width: 900px) 560px, 100vw" width="1600" height="900" alt="ボリュメトリック雲が水面に映り込む様子" loading="lazy" decoding="async" data-zoom>
-    </figure>
-  </div>
-  <p class="more is-strong"><span class="more-key">雲も空と同じ光源で積分し、水面とモデルに映り込む</span>ノイズもアセット無しで、全部エンジン内で生成</p>
+  <h4 class="sub"><span>||</span>主な技術</h4>
+  <ul class="topics">
+        <li><a href="works/koaengine.html#rendering">基本レンダリング<small>PBR・Deferred + Forward</small></a></li>
+        <li><a href="works/koaengine.html#waves">Gerstner Wave × FFT Ocean ハイブリッド水面</a></li>
+        <li><a href="works/koaengine.html#water-color">物理ベース水面<small>水の吸収・散乱から色を計算</small></a></li>
+        <li><a href="works/koaengine.html#optics">水面を光学境界面として扱う<small>反射・屈折・コースティクス</small></a></li>
+        <li><a href="works/koaengine.html#sky">空の色を、大気の物理から計算する<small>Sky Atmosphere</small></a></li>
+        <li><a href="works/koaengine.html#cloud">雲は、密度を積分して描いている<small>Volumetric Cloud</small></a></li>
+  </ul>
 </article>
 
 <!-- SECTION 03 -->
@@ -275,172 +145,22 @@
   <h3 class="band">2024 - 2026年　個人／チーム合わせて 13 作品ほど制作</h3>
   <p class="row-label is-green">// 1年生編</p>
   <ul class="gallery">
-    <li><button type="button" data-zoom-src="assets/img/works/y1-hansha.webp"><img src="assets/img/works/y1-hansha-sm.webp" width="800" height="447" alt="反射迎撃作戦" loading="lazy" decoding="async"></button></li>
-    <li><button type="button" data-zoom-src="assets/img/works/y1-nigeru.webp"><img src="assets/img/works/y1-nigeru-sm.webp" width="800" height="447" alt="逃げるかかち" loading="lazy" decoding="async"></button></li>
-    <li><button type="button" data-zoom-src="assets/img/works/y1-dungeon.webp"><img src="assets/img/works/y1-dungeon-sm.webp" width="800" height="446" alt="1年生のときの作品のゲーム画面" loading="lazy" decoding="async"></button></li>
-    <li><a href="#work-mawarazaru"><img src="assets/img/works/y1-mawarazaru-sm.webp" width="800" height="449" alt="まわらザルをえない" loading="lazy" decoding="async"><span class="gallery-more">詳しく ↓</span></a></li>
-    <li><button type="button" data-zoom-src="assets/img/works/y1-kunaibu.webp"><img src="assets/img/works/y1-kunaibu-sm.webp" width="800" height="438" alt="クナイブ" loading="lazy" decoding="async"></button></li>
-    <li><a href="#work-chrono"><img src="assets/img/works/y1-chrono-sm.webp" width="800" height="450" alt="CHRONO_" loading="lazy" decoding="async"><span class="gallery-more">詳しく ↓</span></a></li>
+    <li><a class="tile" href="works/hansha.html"><img src="assets/img/works/y1-hansha-sm.webp" width="800" height="447" alt="反射迎撃作戦" loading="lazy" decoding="async"><span class="tile-title">反射迎撃作戦</span></a></li>
+    <li><a class="tile" href="works/nigeru.html"><img src="assets/img/works/y1-nigeru-sm.webp" width="800" height="447" alt="逃げるかかち" loading="lazy" decoding="async"><span class="tile-title">逃げるかかち</span></a></li>
+    <li><a class="tile" href="works/untitled-y1.html"><img src="assets/img/works/y1-dungeon-sm.webp" width="800" height="447" alt="1年生のときの作品のゲーム画面" loading="lazy" decoding="async"><span class="tile-title">（作品名）</span></a></li>
+    <li><a class="tile" href="works/mawarazaru.html"><img src="assets/img/works/y1-mawarazaru-sm.webp" width="800" height="449" alt="まわらザルをえない" loading="lazy" decoding="async"><span class="tile-title">まわらザルをえない</span></a></li>
+    <li><a class="tile" href="works/kunaibu.html"><img src="assets/img/works/y1-kunaibu-sm.webp" width="800" height="438" alt="クナイブ" loading="lazy" decoding="async"><span class="tile-title">クナイブ</span></a></li>
+    <li><a class="tile" href="works/chrono.html"><img src="assets/img/works/y1-chrono-sm.webp" width="800" height="450" alt="CHRONO_" loading="lazy" decoding="async"><span class="tile-title">CHRONO_</span></a></li>
   </ul>
   <p class="row-label is-green">// 2年生編</p>
   <ul class="gallery">
-    <li><button type="button" data-zoom-src="assets/img/works/y2-hatou.webp"><img src="assets/img/works/y2-hatou-sm.webp" width="800" height="442" alt="波闘 HATOU" loading="lazy" decoding="async"></button></li>
-    <li><button type="button" data-zoom-src="assets/img/works/y2-gungagan.webp"><img src="assets/img/works/y2-gungagan-sm.webp" width="800" height="446" alt="GUNGAGAN" loading="lazy" decoding="async"></button></li>
-    <li><a href="#work-chainrope"><img src="assets/img/works/y2-chainrope-sm.webp" width="800" height="431" alt="チェインロープ" loading="lazy" decoding="async"><span class="gallery-more">詳しく ↓</span></a></li>
-    <li><a href="#work-biripiyo"><img src="assets/img/works/y2-biripiyo-sm.webp" width="800" height="450" alt="ゲキトツ！ビリぴよランブル" loading="lazy" decoding="async"><span class="gallery-more">詳しく ↓</span></a></li>
-    <li><button type="button" data-zoom-src="assets/img/works/y2-battarush.webp"><img src="assets/img/works/y2-battarush-sm.webp" width="800" height="450" alt="バッタラッシュ" loading="lazy" decoding="async"></button></li>
-    <li><a href="#work-reprism"><img src="assets/img/works/y2-reprism-sm.webp" width="800" height="412" alt="レプリズム" loading="lazy" decoding="async"><span class="gallery-more">詳しく ↓</span></a></li>
+    <li><a class="tile" href="works/hatou.html"><img src="assets/img/works/y2-hatou-sm.webp" width="800" height="442" alt="波闘" loading="lazy" decoding="async"><span class="tile-title">波闘</span></a></li>
+    <li><a class="tile" href="works/gungagan.html"><img src="assets/img/works/y2-gungagan-sm.webp" width="800" height="447" alt="GUNGAGAN" loading="lazy" decoding="async"><span class="tile-title">GUNGAGAN</span></a></li>
+    <li><a class="tile" href="works/chainrope.html"><img src="assets/img/works/y2-chainrope-sm.webp" width="800" height="431" alt="チェインロープ" loading="lazy" decoding="async"><span class="tile-title">チェインロープ</span></a></li>
+    <li><a class="tile" href="works/biripiyo.html"><img src="assets/img/works/y2-biripiyo-sm.webp" width="800" height="450" alt="ゲキトツ！ビリぴよランブル" loading="lazy" decoding="async"><span class="tile-title">ゲキトツ！ビリぴよランブル</span></a></li>
+    <li><a class="tile" href="works/battarush.html"><img src="assets/img/works/y2-battarush-sm.webp" width="800" height="450" alt="バッタラッシュ" loading="lazy" decoding="async"><span class="tile-title">バッタラッシュ</span></a></li>
+    <li><a class="tile" href="works/reprism.html"><img src="assets/img/works/y2-reprism-sm.webp" width="800" height="412" alt="レプリズム" loading="lazy" decoding="async"><span class="tile-title">レプリズム</span></a></li>
   </ul>
-</article>
-
-<article class="page work reveal" id="work-mawarazaru">
-  <div class="work-head">
-    <p class="crumb"><span class="crumb-bar">|</span>チーム作品紹介 <small>/ 1年生編</small></p>
-    <button class="yt" type="button" data-yt="SWsgfPGlIh4" data-title="まわらザルをえない" aria-label="まわらザルをえない の動画を見る（YouTube）"><span class="yt-bar">||</span> Youtube<span class="yt-play" aria-hidden="true"></span>動画を見る</button>
-  </div>
-  <h3 class="work-title">まわらザルをえない</h3>
-  <div class="work-grid">
-    <figure class="work-main"><figcaption>Title</figcaption><img src="assets/img/works/mawarazaru-title.webp" srcset="assets/img/works/mawarazaru-title-sm.webp 800w, assets/img/works/mawarazaru-title.webp 1600w" sizes="(min-width: 900px) 520px, 100vw" width="1595" height="896" alt="まわらザルをえない のタイトル画面" loading="lazy" decoding="async" data-zoom></figure>
-    <div class="work-side">
-      <figure class="work-sub"><figcaption>Game</figcaption>
-        <div class="work-pair">
-          <img src="assets/img/works/mawarazaru-game1-sm.webp" width="800" height="449" alt="まわらザルをえない のゲーム画面 1" loading="lazy" decoding="async" data-zoom>
-          <img src="assets/img/works/mawarazaru-game2-sm.webp" width="800" height="446" alt="まわらザルをえない のゲーム画面 2" loading="lazy" decoding="async" data-zoom>
-        </div>
-      </figure>
-      <dl class="dev">
-        <dt>開発概要</dt>
-        <dd><span>開発環境</span>学内製エンジン</dd>
-        <dd><span>開発人数</span>3人</dd>
-        <dd><span>制作期間</span>1ヶ月</dd>
-      </dl>
-    </div>
-  </div>
-  <div class="work-text">
-    <h4>作品紹介・こだわりポイント</h4>
-    <p>回転するサルを操作し、タイミング良くポールをジャンプしながらゴールを目指すゲームです。</p>
-    <p>タイトルシーンがメインだったので、ゲームにおいて<em class="hl">一番最初に見られる画面に動きを沢山付けて</em>、目を引くような演出になるように制作しました。</p>
-  </div>
-</article>
-
-<article class="page work reveal" id="work-chrono">
-  <div class="work-head">
-    <p class="crumb"><span class="crumb-bar">|</span>チーム作品紹介 <small>/ 1年生編</small></p>
-    <button class="yt" type="button" data-yt="8Q3ayGV7hfs" data-title="CHRONO_" aria-label="CHRONO_ の動画を見る（YouTube）"><span class="yt-bar">||</span> Youtube<span class="yt-play" aria-hidden="true"></span>動画を見る</button>
-  </div>
-  <h3 class="work-title">CHRONO_</h3>
-  <div class="work-grid">
-    <figure class="work-main"><figcaption>Title</figcaption><img src="assets/img/works/chrono-title.webp" srcset="assets/img/works/chrono-title-sm.webp 800w, assets/img/works/chrono-title.webp 1600w" sizes="(min-width: 900px) 520px, 100vw" width="1280" height="720" alt="CHRONO_ のタイトル画面" loading="lazy" decoding="async" data-zoom></figure>
-    <div class="work-side">
-      <figure class="work-sub"><figcaption>Game</figcaption>
-        <div class="work-pair">
-          <img src="assets/img/works/chrono-game1-sm.webp" width="800" height="450" alt="CHRONO_ のゲーム画面 1" loading="lazy" decoding="async" data-zoom>
-          <img src="assets/img/works/chrono-game2-sm.webp" width="800" height="450" alt="CHRONO_ のゲーム画面 2" loading="lazy" decoding="async" data-zoom>
-        </div>
-      </figure>
-      <dl class="dev">
-        <dt>開発概要</dt>
-        <dd><span>開発環境</span>学内製エンジン</dd>
-        <dd><span>開発人数</span>3人</dd>
-        <dd><span>制作期間</span>1ヶ月</dd>
-      </dl>
-    </div>
-  </div>
-  <div class="work-text">
-    <h4>作品紹介・こだわりポイント</h4>
-    <p>制限時間内に、時間を止めて敵をクリックし沢山連鎖させてスコアを稼ぐゲームです。</p>
-    <p>タイトルシーンとゲームシーンのシステム部分の土台を制作しました。<em class="hl">学内製エンジンをチームメンバーがより簡単に扱える</em>ようにし、行列演算やゲームを支えるコア部分の設計に力を入れました。</p>
-  </div>
-</article>
-
-<article class="page work reveal" id="work-chainrope">
-  <div class="work-head">
-    <p class="crumb"><span class="crumb-bar">|</span>チーム作品紹介 <small>/ 2年生編</small></p>
-    <button class="yt" type="button" data-yt="S9ddgf2_-Ak" data-title="チェインロープ" aria-label="チェインロープ の動画を見る（YouTube）"><span class="yt-bar">||</span> Youtube<span class="yt-play" aria-hidden="true"></span>動画を見る</button>
-  </div>
-  <h3 class="work-title">チェインロープ</h3>
-  <div class="work-grid">
-    <figure class="work-main"><figcaption>Title</figcaption><img src="assets/img/works/chainrope-title.webp" srcset="assets/img/works/chainrope-title-sm.webp 800w, assets/img/works/chainrope-title.webp 1600w" sizes="(min-width: 900px) 520px, 100vw" width="1600" height="862" alt="チェインロープ のタイトル画面" loading="lazy" decoding="async" data-zoom></figure>
-    <div class="work-side">
-      <figure class="work-sub"><figcaption>Game</figcaption>
-        <div class="work-pair">
-          <img src="assets/img/works/chainrope-game1-sm.webp" width="800" height="426" alt="チェインロープ のゲーム画面 1" loading="lazy" decoding="async" data-zoom>
-          <img src="assets/img/works/chainrope-game2-sm.webp" width="800" height="428" alt="チェインロープ のゲーム画面 2" loading="lazy" decoding="async" data-zoom>
-        </div>
-      </figure>
-      <dl class="dev">
-        <dt>開発概要</dt>
-        <dd><span>開発環境</span>DirectX12</dd>
-        <dd><span>開発人数</span>3人</dd>
-        <dd><span>制作期間</span>1ヶ月</dd>
-      </dl>
-    </div>
-  </div>
-  <div class="work-text">
-    <h4>作品紹介・こだわりポイント</h4>
-    <p>マップに配置されているアンカーポイントを目掛けてチェーンを伸ばし、ゴールを目指すゲームです。</p>
-    <p>タイトルシーンとステージセレクトシーン、ゲームシーンの演出の部分を担当しました。自分以外のエンジンを使った初めての制作だったので、試行錯誤しながらシェーダーを使った演出に力を入れました。<br>セレクトシーンの背景やシーン遷移など、<em class="hl">どんな演出にしたら世界観とマッチするのか？</em>を意識して実装しました。</p>
-  </div>
-</article>
-
-<article class="page work reveal" id="work-biripiyo">
-  <div class="work-head">
-    <p class="crumb"><span class="crumb-bar">|</span>チーム作品紹介 <small>/ 2年生編</small></p>
-    <button class="yt" type="button" data-yt="ebMjJN3VPf4" data-title="ゲキトツ！ビリぴよランブル" aria-label="ゲキトツ！ビリぴよランブル の動画を見る（YouTube）"><span class="yt-bar">||</span> Youtube<span class="yt-play" aria-hidden="true"></span>動画を見る</button>
-  </div>
-  <h3 class="work-title">ゲキトツ！ビリぴよランブル</h3>
-  <div class="work-grid">
-    <figure class="work-main"><figcaption>Title</figcaption><img src="assets/img/works/biripiyo-title.webp" srcset="assets/img/works/biripiyo-title-sm.webp 800w, assets/img/works/biripiyo-title.webp 1600w" sizes="(min-width: 900px) 520px, 100vw" width="1600" height="900" alt="ゲキトツ！ビリぴよランブル のタイトル画面" loading="lazy" decoding="async" data-zoom></figure>
-    <div class="work-side">
-      <figure class="work-sub"><figcaption>Game</figcaption>
-        <div class="work-pair">
-          <img src="assets/img/works/biripiyo-game1-sm.webp" width="800" height="450" alt="ゲキトツ！ビリぴよランブル のゲーム画面 1" loading="lazy" decoding="async" data-zoom>
-          <img src="assets/img/works/biripiyo-game2-sm.webp" width="800" height="451" alt="ゲキトツ！ビリぴよランブル のゲーム画面 2" loading="lazy" decoding="async" data-zoom>
-        </div>
-      </figure>
-      <dl class="dev">
-        <dt>開発概要</dt>
-        <dd><span>開発環境</span>DirectX12 <em class="now">// CoreEngine</em></dd>
-        <dd><span>開発人数</span>3人</dd>
-        <dd><span>制作期間</span>1ヶ月</dd>
-      </dl>
-    </div>
-  </div>
-  <div class="work-text">
-    <h4>作品紹介・こだわりポイント</h4>
-    <p>プレイヤーは回転しながら敵にゲキトツし、雷があるステージ 4 隅にぶつけるアクションゲームです。UI を含むゲーム内にある全てがボクセルで構成されています。</p>
-    <p>タイトルシーンをメインとして担当しました。<em class="hl">タイトルからユーザーに気を引いてもらえる</em>ように背景で敵とプレイヤーが追いかけっこをしている演出を入れたり、<em class="hl">ボクセルによる稲妻の演出に特に力を入れました</em>。</p>
-  </div>
-</article>
-
-<article class="page work reveal" id="work-reprism">
-  <div class="work-head">
-    <p class="crumb"><span class="crumb-bar">|</span>チーム作品紹介 <small>/ 2年生編</small></p>
-    <button class="yt" type="button" data-yt="GqzL1yluQMc" data-title="レプリズム" aria-label="レプリズム の動画を見る（YouTube）"><span class="yt-bar">||</span> Youtube<span class="yt-play" aria-hidden="true"></span>動画を見る</button>
-  </div>
-  <h3 class="work-title">レプリズム</h3>
-  <div class="work-grid">
-    <figure class="work-main"><figcaption>Title</figcaption><img src="assets/img/works/reprism-title.webp" srcset="assets/img/works/reprism-title-sm.webp 800w, assets/img/works/reprism-title.webp 1600w" sizes="(min-width: 900px) 520px, 100vw" width="1600" height="848" alt="レプリズム のタイトル画面" loading="lazy" decoding="async" data-zoom></figure>
-    <div class="work-side">
-      <figure class="work-sub"><figcaption>Game</figcaption>
-        <div class="work-pair">
-          <img src="assets/img/works/reprism-game1-sm.webp" width="800" height="421" alt="レプリズム のゲーム画面 1" loading="lazy" decoding="async" data-zoom>
-          <img src="assets/img/works/reprism-game2-sm.webp" width="800" height="423" alt="レプリズム のゲーム画面 2" loading="lazy" decoding="async" data-zoom>
-        </div>
-      </figure>
-      <dl class="dev">
-        <dt>開発概要</dt>
-        <dd><span>開発環境</span>DirectX12 <em class="now">// CoreEngine</em></dd>
-        <dd><span>開発人数</span>3人</dd>
-        <dd><span>制作期間</span>4ヶ月</dd>
-      </dl>
-    </div>
-  </div>
-  <div class="work-text">
-    <h4>作品紹介・こだわりポイント</h4>
-    <p>自作エンジンで行う初めての完全 2D ゲームを作成しました。タイトル・ステージセレクト・ゲームシーン・演出面などを担当しました。</p>
-    <p>2D のテクスチャに<em class="hl">シェーダーを使って演出を鮮やか</em>にしたり、テクスチャアニメーションでは表現が難しい演出などを、全てシェーダーを使用して画面が鮮やかになるように意識しました。</p>
-  </div>
 </article>
 
 </main>

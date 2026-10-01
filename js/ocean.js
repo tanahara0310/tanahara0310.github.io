@@ -140,27 +140,27 @@ vec3 causticPattern(vec2 p, float t, float width) {
   vec3 wv = width * vec3(1.12, 1.0, 0.9);
   vec3 c1 = 1.0 - smoothstep(vec3(0.0), wv, vec3(e1));
   vec3 c2 = 1.0 - smoothstep(vec3(0.0), wv * 0.85, vec3(e2));
-  float vary = 0.15 + 1.5 * smoothstep(0.15, 0.85, vnoise(p * 0.32 + t * 0.06));
-  return (c1 * c1 * c1 + 0.32 * c2 * c2 * c2) * vary;
+  float vary = 0.3 + 1.0 * smoothstep(0.2, 0.85, vnoise(p * 0.28 + t * 0.05));
+  return (c1 * c1 + 0.2 * c2 * c2) * vary;
 }
 
 vec3 sandAlbedo(vec2 p) {
   float n = fbm(p * 1.3);
   float n2 = vnoise(p * 7.0 + 13.0);
   vec3 a = mix(vec3(0.70, 0.66, 0.55), vec3(0.86, 0.83, 0.72), n);
-  a *= 0.9 + 0.2 * n2;
+  a *= (0.9 + 0.2 * n2) * (0.84 + 0.3 * vnoise(p * 0.35 + 5.0));
   float patchM = smoothstep(0.62, 0.72, vnoise(p * 0.16 + 41.0) * 0.7 + vnoise(p * 0.41 + 17.0) * 0.3);
-  a = mix(a, vec3(0.16, 0.20, 0.13) * (0.7 + 0.6 * n2), patchM * 0.8);
+  a = mix(a, vec3(0.16, 0.20, 0.13) * (0.7 + 0.6 * n2), patchM * 0.65);
   return a;
 }
 
 // 砂紋の法線
 vec3 sandNormal(vec2 p) {
   vec2 dir = normalize(vec2(0.8, 0.6));
-  float w = vnoise(p * 0.5) * 6.0;
+  float w = vnoise(p * 0.5) * 6.0 + vnoise(p * 1.7 + 3.0) * 2.5;
   float f = 2.0 * PI / 0.24;
   float c = cos(dot(p, dir) * f + w);
-  vec2 g = dir * c * 0.18;
+  vec2 g = dir * c * 0.2 * (0.4 + 0.6 * vnoise(p * 0.23 + 9.0));
   return normalize(vec3(-g, 1.0));
 }
 
@@ -206,10 +206,9 @@ void main() {
 
   // 集光: 海底の模様（深いほど大きくぼやける）× 波紋による屈折の写像のヤコビアン
   float deepK = smoothstep(2.0, 30.0, D);
-  float cellM = mix(0.62, 1.5, deepK);
-  vec3 pat = causticPattern(xf / cellM + vec2(0.0, 7.0), t * 0.8, mix(0.13, 0.32, deepK));
-  float strength = mix(1.9, 0.5, deepK);
-  vec3 caust = mix(vec3(0.55), vec3(0.55) + pat * 1.9, strength / 1.9);
+  float cellM = mix(0.85, 1.6, deepK);
+  vec3 pat = causticPattern(xf / cellM + vec2(0.0, 7.0), t * 0.7, mix(0.10, 0.30, deepK));
+  vec3 caust = vec3(0.85) + pat * mix(0.75, 0.2, deepK);
 
   float simBlur = exp(-0.5 * pow(D * 0.06, 2.0));
   vec3 kr = vec3(0.246, 0.250, 0.255) * D;
@@ -315,7 +314,7 @@ function program(gl, fs) {
 
 /**
  * @param {HTMLCanvasElement} canvas
- * @param {{ reducedMotion?: boolean, getScroll: () => number }} opts
+ * @param {{ reducedMotion?: boolean, getScroll: () => number, depth?: number, light?: number }} opts
  */
 export function createOcean(canvas, opts) {
   const gl = canvas.getContext('webgl2', {
@@ -439,8 +438,8 @@ export function createOcean(canvas, opts) {
   let lastScroll = opts.getScroll();
   let shiftAcc = 0;
   let time = 0;
-  let depth = 1.2, depthTarget = 1.2;
-  let light = 1, lightTarget = 1;
+  let depth = opts.depth ?? 1.2, depthTarget = depth;
+  let light = opts.light ?? 1, lightTarget = light;
   let last = performance.now();
   let frameAcc = 0, frameCount = 0;
   let raf = 0;

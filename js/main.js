@@ -2,12 +2,32 @@ import { createOcean } from './ocean.js';
 
 const root = document.documentElement;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// ?still を付けると波の時間を止める（見た目を同じ条件で比べる用）
+const still = new URLSearchParams(window.location.search).has('still');
+const calm = reducedMotion || still;
+
+// スクロール量を水深に（範囲はページごとに body の data-depth="浅い,深い"）
+const [DEPTH_TOP, DEPTH_BOTTOM] = (document.body.dataset.depth || '1.2,48').split(',').map(Number);
+
+function scrollProgress() {
+  const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+  return Math.min(1, Math.max(0, window.scrollY / max));
+}
+
+function depthAt(p) {
+  return DEPTH_TOP * Math.pow(DEPTH_BOTTOM / DEPTH_TOP, Math.pow(p, 0.7));
+}
+
+function lightAt(depth) {
+  return 1 - 0.5 * Math.min(1, Math.log(depth / 1.2) / Math.log(40));
+}
 
 // 背景の海
 const canvas = document.getElementById('ocean');
 let ocean = null;
 try {
-  ocean = createOcean(canvas, { reducedMotion, getScroll: () => window.scrollY });
+  const depth = depthAt(scrollProgress());
+  ocean = createOcean(canvas, { reducedMotion: calm, getScroll: () => window.scrollY, depth, light: lightAt(depth) });
 } catch (e) {
   console.warn('[ocean]', e);
 }
@@ -36,14 +56,14 @@ document.addEventListener('pointerdown', (e) => {
 // マウスを動かすと細い航跡を残す
 let lastTrail = null;
 document.addEventListener('pointermove', (e) => {
-  if (!ocean || e.pointerType !== 'mouse' || reducedMotion || viewer.open) return;
+  if (!ocean || e.pointerType !== 'mouse' || calm || viewer.open) return;
   if (lastTrail && Math.hypot(e.clientX - lastTrail.x, e.clientY - lastTrail.y) < 18) return;
   lastTrail = { x: e.clientX, y: e.clientY };
   ocean.drop(e.clientX, e.clientY, 11, 0.07);
 }, { passive: true });
 
 // ときどき水面に何かが落ちる
-if (ocean && !reducedMotion) {
+if (ocean && !calm) {
   const idle = () => {
     if (!document.hidden && !viewer.open) {
       ocean.drop(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 14 + Math.random() * 10, 0.35 + Math.random() * 0.3);
@@ -54,22 +74,19 @@ if (ocean && !reducedMotion) {
   setTimeout(() => ocean.drop(window.innerWidth * 0.5, window.innerHeight * 0.42, 40, 1.4), 700);
 }
 
-// スクロール量を水深に
+// 水深計とヘッダー
 const header = document.querySelector('.site-header');
 const depthEl = document.querySelector('.depth');
 const depthValue = document.querySelector('.depth-value b');
-const DEPTH_TOP = 1.2;
-const DEPTH_BOTTOM = 48;
 let scrollQueued = false;
 
 function onScroll() {
   scrollQueued = false;
-  const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-  const p = Math.min(1, Math.max(0, window.scrollY / max));
-  const depth = DEPTH_TOP * Math.pow(DEPTH_BOTTOM / DEPTH_TOP, Math.pow(p, 0.7));
+  const p = scrollProgress();
+  const depth = depthAt(p);
   if (ocean) {
     ocean.setDepth(depth);
-    ocean.setLight(1 - 0.5 * p);
+    ocean.setLight(lightAt(depth));
   }
   depthEl.style.setProperty('--p', p.toFixed(4));
   depthValue.textContent = depth.toFixed(1);
@@ -131,17 +148,8 @@ document.addEventListener('click', (e) => {
     openViewer(img, zoomImg.alt);
     return;
   }
-  const zoomBtn = e.target.closest('[data-zoom-src]');
-  if (zoomBtn) {
-    const thumb = zoomBtn.querySelector('img');
-    const img = new Image();
-    img.src = zoomBtn.dataset.zoomSrc;
-    img.alt = thumb ? thumb.alt : '';
-    openViewer(img, img.alt);
-    return;
-  }
   const yt = e.target.closest('[data-yt]');
-  if (yt) {
+  if (yt && yt.dataset.yt) {
     const frame = document.createElement('iframe');
     frame.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(yt.dataset.yt)}?autoplay=1&rel=0&playsinline=1`;
     frame.title = yt.dataset.title || 'YouTube';
