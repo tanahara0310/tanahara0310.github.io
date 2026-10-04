@@ -4,14 +4,16 @@
 
 背景の海は WebGL2 で描いています。クリック（タップ）すると波紋が広がり、スクロールするほど海が深くなります。
 
+ゲーム風のつくりです。上の HUD に Lv（解除した実績の数 + 1）・作品ずかんの発見数・水深が出ます。見た作品と実績はブラウザの localStorage（`koa.seen` / `koa.ach` / `koa.ripples`）に残ります。
+
 ## 構成
 
 ```
-index.html              トップ（表紙・自己紹介・就活作品の紹介・チーム作品の一覧）
+index.html              トップ（表紙・STAGE 1 メインクエスト・STAGE 2 作品ずかん・STAGE 3 プレイヤー情報）
 works/koaengine.html    就活作品 koaEngine
 works/*.html            チーム作品 1 本につき 1 ページ
 css/style.css           見た目
-js/main.js              クリックの波紋・水深計・拡大表示・動画・時刻スライダー
+js/main.js              波紋・HUD・実績解除・ずかんの絞り込み・カードめくり・拡大表示・動画・時刻スライダー
 js/ocean.js             背景の海（波の高さ場の計算と描画のシェーダー）
 assets/img/             画像（engine / works / profile / icons）
 tools/serve.py          手元で確認するためのサーバー
@@ -54,11 +56,13 @@ python tools/serve.py
 - ゲーム画面: `assets/img/works/作品名-game1.webp`（幅 1600）と `作品名-game1-sm.webp`（幅 800）を置き、`<div class="img-todo">…</div>` をコメントの例の `<img>` に置き換える
 - 動画: `data-yt=""` に YouTube の動画 ID（`watch?v=` の後ろ）を入れるとボタンが出る
 - 作品名を直したとき（`untitled-y1.html` など）は、ページ内の `（作品名）`、`index.html` の一覧の名前、前後の作品のページの「前の作品／次の作品」も直す
+- 埋めたら `index.html` の作品ずかんのカード（`data-slug="作品名"`）も直す：`準備中` のバッジ（`zcard-badge is-wip`）を消し、`zcard-text` に一言紹介、`zcard-tags` に開発環境・人数・期間を書く
 
 ## 作品を足す
 
 1. `tools/work-template.html` を `works/英字の名前.html` にコピーして `✎` の所を埋める
-2. `index.html` の「チーム作品紹介」の一覧に `<li><a class="tile" href="works/英字の名前.html">…</a></li>` を足す
-3. 前後の作品のページの「前の作品／次の作品」のリンクを、新しいページを指すように直す
+2. `index.html` の作品ずかんに `<li class="zcard" data-slug="英字の名前" data-cat="y2">…</li>` を 1 枚足す（ほかのカードをコピーして書き換える。番号は No.014 から）
+3. 作品の数を直す：`js/main.js` の `TOTAL_WORKS`、`index.html` の「13」（表紙の数字・STAGE 2 の説明・絞り込みボタンの数）、全ページの HUD の `/13`
+4. 前後の作品のページの「前の作品／次の作品」のリンクを、新しいページを指すように直す
 
 push すると、1〜2 分で GitHub Pages に反映されます。

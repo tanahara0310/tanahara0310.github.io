@@ -35,6 +35,94 @@ if (!ocean) root.classList.add('no-webgl');
 
 const viewer = document.getElementById('viewer');
 
+// あそびの記録（実績・見た作品）。保存できない環境でもページは動く
+const TOTAL_WORKS = 13;
+const store = {
+  get(key, fallback) {
+    try {
+      const v = window.localStorage.getItem(`koa.${key}`);
+      return v ? JSON.parse(v) : fallback;
+    } catch {
+      return fallback;
+    }
+  },
+  set(key, value) {
+    try {
+      window.localStorage.setItem(`koa.${key}`, JSON.stringify(value));
+    } catch {
+      // 保存できなくても続ける
+    }
+  },
+};
+
+const ACHIEVEMENTS = {
+  ripple: { icon: '波', title: 'はじめての波紋', text: '水面にふれた' },
+  ripple30: { icon: '紋', title: '波紋マスター', text: '水面に 30 回ふれた' },
+  deep: { icon: '深', title: '深海に到達', text: 'いちばん下までもぐった' },
+  main: { icon: '主', title: 'メインクエスト発見', text: '就活作品のページをひらいた' },
+  seen5: { icon: '見', title: 'ずかん 5 種', text: '5 作品を見た' },
+  complete: { icon: '全', title: 'ずかんコンプリート', text: `${TOTAL_WORKS} 作品ぜんぶ見た` },
+};
+const unlocked = new Set(store.get('ach', []));
+const seen = new Set(store.get('seen', []));
+const toastBox = document.querySelector('.toasts');
+
+function showToast(a) {
+  if (!toastBox) return;
+  const el = document.createElement('div');
+  el.className = 'toast';
+  const icon = document.createElement('span');
+  icon.className = 'toast-icon';
+  icon.textContent = a.icon;
+  const body = document.createElement('div');
+  const label = document.createElement('small');
+  label.textContent = '実績解除！';
+  const title = document.createElement('b');
+  title.textContent = a.title;
+  const text = document.createElement('span');
+  text.textContent = a.text;
+  body.append(label, title, text);
+  el.append(icon, body);
+  toastBox.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('is-out');
+    el.addEventListener('animationend', () => el.remove(), { once: true });
+    setTimeout(() => el.remove(), 800);
+  }, 3600);
+}
+
+function updateHud() {
+  const lv = document.querySelector('[data-hud-lv]');
+  const count = document.querySelector('[data-hud-seen]');
+  const n = Math.min(TOTAL_WORKS, seen.size);
+  if (lv) lv.textContent = String(1 + unlocked.size);
+  if (count) count.textContent = String(n);
+  root.style.setProperty('--seen', (n / TOTAL_WORKS).toFixed(3));
+  document.querySelectorAll('.zcard[data-slug]').forEach((c) => c.classList.toggle('is-seen', seen.has(c.dataset.slug)));
+}
+
+function unlock(key) {
+  if (unlocked.has(key) || !ACHIEVEMENTS[key]) return;
+  unlocked.add(key);
+  store.set('ach', [...unlocked]);
+  updateHud();
+  showToast(ACHIEVEMENTS[key]);
+}
+
+const work = document.body.dataset.work;
+if (work && work !== 'new-work') {
+  seen.add(work);
+  store.set('seen', [...seen]);
+}
+updateHud();
+setTimeout(() => {
+  if (seen.has('koaengine')) unlock('main');
+  if (seen.size >= 5) unlock('seen5');
+  if (seen.size >= TOTAL_WORKS) unlock('complete');
+}, 900);
+
+let ripples = store.get('ripples', 0);
+
 function tapRipple(x, y) {
   const el = document.createElement('span');
   el.className = 'tap-ripple';
@@ -51,6 +139,10 @@ document.addEventListener('pointerdown', (e) => {
   } else {
     tapRipple(e.clientX, e.clientY);
   }
+  ripples++;
+  store.set('ripples', ripples);
+  unlock('ripple');
+  if (ripples >= 30) unlock('ripple30');
 }, { passive: true });
 
 // マウスを動かすと細い航跡を残す
@@ -74,10 +166,8 @@ if (ocean && !calm) {
   setTimeout(() => ocean.drop(window.innerWidth * 0.5, window.innerHeight * 0.42, 40, 1.4), 700);
 }
 
-// 水深計とヘッダー
-const header = document.querySelector('.site-header');
-const depthEl = document.querySelector('.depth');
-const depthValue = document.querySelector('.depth-value b');
+// 水深を HUD に
+const depthValue = document.querySelector('[data-hud-depth]');
 let scrollQueued = false;
 
 function onScroll() {
@@ -88,9 +178,8 @@ function onScroll() {
     ocean.setDepth(depth);
     ocean.setLight(lightAt(depth));
   }
-  depthEl.style.setProperty('--p', p.toFixed(4));
-  depthValue.textContent = depth.toFixed(1);
-  header.classList.toggle('is-scrolled', window.scrollY > window.innerHeight * 0.6);
+  if (depthValue) depthValue.textContent = depth.toFixed(1);
+  if (p > 0.97 && document.documentElement.scrollHeight > window.innerHeight * 2) unlock('deep');
 }
 window.addEventListener('scroll', () => {
   if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(onScroll); }
@@ -218,3 +307,30 @@ document.querySelectorAll('.timeslide').forEach((box) => {
   }));
   apply(0);
 });
+
+// 作品ずかんの絞り込み
+const filterButtons = document.querySelectorAll('.filters [data-filter]');
+filterButtons.forEach((btn) => btn.addEventListener('click', () => {
+  const f = btn.dataset.filter;
+  filterButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+  document.querySelectorAll('.zcard').forEach((c) => c.classList.toggle('is-hidden', f !== 'all' && c.dataset.cat !== f));
+}));
+
+// 写真と自作エンジンのカードをめくる
+const flipCards = document.querySelectorAll('.flip');
+const flipButtons = document.querySelectorAll('[data-flip]');
+
+function syncFlipButtons() {
+  const all = [...flipCards].every((c) => c.classList.contains('is-flipped'));
+  const none = [...flipCards].every((c) => !c.classList.contains('is-flipped'));
+  flipButtons.forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.flip === 'engine' && all) || (b.dataset.flip === 'photo' && none))));
+}
+
+flipCards.forEach((c) => c.addEventListener('click', () => {
+  c.classList.toggle('is-flipped');
+  syncFlipButtons();
+}));
+flipButtons.forEach((b) => b.addEventListener('click', () => {
+  flipCards.forEach((c) => c.classList.toggle('is-flipped', b.dataset.flip === 'engine'));
+  syncFlipButtons();
+}));

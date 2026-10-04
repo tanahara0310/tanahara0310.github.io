@@ -5,171 +5,371 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>棚原 誇亜 | Portfolio</title>
 <meta name="description" content="大好きな故郷、沖縄の海を自作ゲームエンジン（DirectX12）で再現する。棚原 誇亜のポートフォリオ。">
-<meta name="theme-color" content="#050B10">
+<meta name="theme-color" content="#0aa3b2">
 <meta property="og:type" content="website">
 <meta property="og:title" content="棚原 誇亜 | Portfolio">
-<meta property="og:description" content="大好きな故郷、沖縄の海を自作ゲームエンジン（DirectX12）で再現する。棚原 誇亜のポートフォリオ。">
+<meta property="og:description" content="大好きな故郷、沖縄の海を自作ゲームエンジン（DirectX12）で再現する。">
 <meta property="og:url" content="https://tanahara0310.github.io/">
 <meta property="og:image" content="https://tanahara0310.github.io/assets/img/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@300;500;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
 <link rel="stylesheet" href="css/style.css">
 <script>document.documentElement.classList.add('js');</script>
 </head>
-<body data-depth="1.2,20">
+<body data-depth="1.2,30">
 <canvas id="ocean" aria-hidden="true"></canvas>
 <div class="sea-fallback" aria-hidden="true"></div>
 
-<header class="site-header">
-  <a class="logo" href="#top">KOA TANAHARA</a>
-  <nav class="site-nav" aria-label="サイト内">
-    <a href="#about">自己紹介</a>
-    <a href="works/koaengine.html">就活作品</a>
-    <a href="#works">チーム作品</a>
+<header class="hud">
+  <a class="hud-logo" href="#top"><span class="hud-mark">K</span><span class="hud-name"><b>棚原 誇亜</b><small>KOA TANAHARA</small></span></a>
+  <nav class="hud-nav" aria-label="サイト内">
+    <a href="#main">メインクエスト</a>
+    <a href="#zukan">作品ずかん</a>
+    <a href="#player">プレイヤー</a>
   </nav>
+  <div class="hud-stats">
+    <span class="hud-pill is-lv" title="解除した実績の数 + 1">Lv.<b data-hud-lv>1</b></span>
+    <span class="hud-pill" title="見た作品の数">ずかん <b data-hud-seen>0</b>/13<span class="hud-bar"><i></i></span></span>
+    <span class="hud-pill is-depth" title="いまの水深">水深 <b data-hud-depth>1.2</b>m</span>
+  </div>
 </header>
 
-<div class="depth" aria-hidden="true">
-  <span class="depth-label">DEPTH</span>
-  <div class="depth-track"><span class="depth-mark"></span></div>
-  <span class="depth-value"><b>0.0</b>m</span>
-</div>
+<nav class="dock" aria-label="サイト内">
+  <a href="#top"><b>▲</b>トップ</a>
+  <a href="#main"><b>★</b>メイン</a>
+  <a href="#zukan"><b>■</b>ずかん</a>
+  <a href="#player"><b>●</b>プレイヤー</a>
+</nav>
+
+<div class="toasts" aria-live="polite"></div>
 
 <main>
 
 <!-- 表紙 -->
-<section class="cover" id="top">
-  <div class="cover-inner">
-    <p class="cover-eyebrow">PORTFOLIO</p>
-    <h1 class="cover-name">棚原 誇亜</h1>
-    <p class="cover-roman">KOA TANAHARA</p>
-    <span class="cover-rule"></span>
-    <p class="cover-lead">大好きな故郷、沖縄の海を<br>自作ゲームエンジンで。</p>
-  </div>
-  <nav class="contents" aria-label="目次">
-    <p class="contents-title">目次 <span>CONTENTS</span></p>
-    <ol>
-      <li><a href="#about"><span>01</span>自己紹介</a></li>
-      <li><a href="#engine"><span>02</span>就活作品紹介</a></li>
-      <li><a href="#works"><span>03</span>チーム作品紹介</a></li>
-    </ol>
-  </nav>
-  <p class="cover-hint"><span class="hint-dot"></span>水面をクリックすると、波紋が広がります</p>
-</section>
-
-<!-- SECTION 01 -->
-<section class="door" id="about">
-  <p class="door-no">SECTION 01</p>
-  <h2 class="door-title">自己紹介</h2>
-</section>
-
-<article class="page reveal">
-  <p class="crumb"><span class="crumb-bar">|</span>自己紹介</p>
-  <div class="about">
-    <figure class="about-photo">
-      <img src="assets/img/profile/photo.webp" width="640" height="850" alt="棚原 誇亜の写真" loading="lazy" decoding="async">
-      <figcaption>
-        <span class="about-name">棚原 誇亜</span>
-        <span class="about-roman">KOA TANAHARA</span>
-      </figcaption>
-    </figure>
-    <div class="about-body">
-      <dl class="hobby">
-        <dt>趣味</dt>
-        <dd>LIVE・音楽を聴く・ゲーム・ボウリング・ダーツ・体を動かすこと</dd>
-      </dl>
-      <h3 class="sub"><span>||</span>使用可能なツール</h3>
-      <ul class="skills">
-        <li><img src="assets/img/icons/visualstudio.png" width="48" height="48" alt="">Visual Studio</li>
-        <li><img src="assets/img/icons/github.png" width="48" height="48" alt="">GitHub</li>
-        <li><img class="pixel" src="assets/img/icons/aseprite.png" width="48" height="48" alt="">Aseprite</li>
-        <li><img src="assets/img/icons/blender.png" width="48" height="48" alt="">Blender</li>
-      </ul>
-      <h3 class="sub"><span>||</span>使用可能な言語</h3>
-      <ul class="skills">
-        <li><img src="assets/img/icons/c.png" width="48" height="48" alt="">C</li>
-        <li><img src="assets/img/icons/cpp.png" width="48" height="48" alt="">C++</li>
-      </ul>
+<section class="hero" id="top">
+  <div class="hero-copy">
+    <p class="hero-hello">ようこそ！ 沖縄の海へ</p>
+    <h1 class="hero-title on-sea">大好きな故郷、<br><em>沖縄の海</em>を<br>自作エンジンで。</h1>
+    <p class="hero-name on-sea">棚原 誇亜<small>KOA TANAHARA</small></p>
+    <div class="hero-stats">
+      <span class="stat"><b>1年半</b><span>自作エンジン</span></span>
+      <span class="stat"><b>13</b><span>作品</span></span>
+      <span class="stat"><b>DX12</b><span>SDK</span></span>
+      <span class="stat"><b>C++</b><span>言語</span></span>
+    </div>
+    <div class="hero-actions">
+      <a class="btn" href="#main"><span class="btn-arrow">▶</span>PRESS START</a>
+      <a class="btn is-white" href="#zukan">作品ずかんを見る</a>
     </div>
   </div>
-</article>
-
-<!-- SECTION 02 -->
-<section class="door" id="engine">
-  <p class="door-no">SECTION 02</p>
-  <h2 class="door-title">就活作品紹介</h2>
+  <a class="quest card" href="works/koaengine.html">
+    <div class="quest-img">
+      <img src="assets/img/engine/cover.webp" srcset="assets/img/engine/cover-sm.webp 800w, assets/img/engine/cover.webp 1600w" sizes="(min-width: 900px) 520px, 100vw" width="1600" height="900" alt="自作エンジンで描いた沖縄の海と島" decoding="async">
+      <span class="quest-badge">MAIN QUEST</span>
+    </div>
+    <div class="quest-body">
+      <h2>koaEngine<small>自作ゲームエンジン</small></h2>
+      <p>目標：沖縄の海を自作ゲームエンジンで実装</p>
+      <span class="quest-go" aria-hidden="true">▶</span>
+    </div>
+  </a>
+  <p class="hint"><span class="hint-dot"></span>水面をクリックすると、波紋が広がります</p>
 </section>
 
-<article class="page reveal">
-  <p class="crumb"><span class="crumb-bar">|</span>就活作品紹介</p>
-  <h3 class="band">koaEngine（自作エンジン）</h3>
-  <div class="split is-media-first is-wide-media">
-    <a class="card-media" href="works/koaengine.html">
-      <img src="assets/img/engine/cover.webp" srcset="assets/img/engine/cover-sm.webp 800w, assets/img/engine/cover.webp 1600w" sizes="(min-width: 900px) 640px, 100vw" width="1600" height="900" alt="自作エンジンで描いた沖縄の海と島" loading="lazy" decoding="async">
-    </a>
-    <div class="split-text">
-      <p class="card-goal"><span class="goal-tag">目標：</span>沖縄の海を自作ゲームエンジンで実装</p>
-      <dl class="spec is-compact">
-        <div><dt>制作人数</dt><dd>1人</dd></div>
-        <div><dt>SDK</dt><dd>DirectX12</dd></div>
-        <div class="wide"><dt>制作期間</dt><dd>約1年半 <em class="now">// 現在も制作中</em></dd></div>
-      </dl>
-      <div class="card-actions">
-        <a class="btn" href="works/koaengine.html">作品ページを見る<span aria-hidden="true">→</span></a>
-        <button class="yt" type="button" data-yt="gtPeppsGQYw" data-title="プログラム説明動画" aria-label="プログラム説明動画を見る（YouTube）"><span class="yt-bar">||</span> Youtube<span class="yt-play" aria-hidden="true"></span>説明動画</button>
+<!-- STAGE 1 -->
+<section class="stage" id="main">
+  <div class="stage-head">
+    <span class="stage-label">STAGE 1</span>
+    <h2 class="stage-title on-sea">メインクエスト</h2>
+    <p class="stage-lead">エリア：浅瀬 ─ 就活作品・自作ゲームエンジン</p>
+  </div>
+  <article class="main-card card reveal">
+    <div class="main-top">
+      <button class="video" type="button" data-yt="gtPeppsGQYw" data-title="プログラム説明動画" aria-label="プログラム説明動画を見る（YouTube）">
+        <img src="assets/img/engine/editor-sm.webp" width="800" height="450" alt="" loading="lazy" decoding="async">
+        <span class="video-play" aria-hidden="true"></span>
+        <span class="video-label">プログラム説明動画を見る</span>
+      </button>
+      <div>
+        <p class="main-goal">No.013 ・ 就活作品</p>
+        <h3 class="main-title">koaEngine<small>自作エンジン</small></h3>
+        <p class="main-copy">目標は、<mark>沖縄の海を自作ゲームエンジンで実装</mark>すること。大好きな故郷、沖縄の海をゲームエンジンで再現したかったから。</p>
+        <div class="chips">
+          <span class="chip">1人で制作</span>
+          <span class="chip">約1年半 ・ 現在も制作中</span>
+          <span class="chip">DirectX12</span>
+          <span class="chip is-gray">DirectXTex</span>
+          <span class="chip is-gray">ImGui, ImGuizmo</span>
+          <span class="chip is-gray">Assimp</span>
+          <span class="chip is-gray">nlohmann json</span>
+        </div>
+        <a class="btn is-sea" href="works/koaengine.html">作品ページで詳しく見る<span class="btn-arrow">▶</span></a>
       </div>
     </div>
-  </div>
-  <h4 class="sub"><span>||</span>主な技術</h4>
-  <ul class="topics">
-        <li><a href="works/koaengine.html#rendering">基本レンダリング<small>PBR・Deferred + Forward</small></a></li>
-        <li><a href="works/koaengine.html#waves">Gerstner Wave × FFT Ocean ハイブリッド水面</a></li>
-        <li><a href="works/koaengine.html#water-color">物理ベース水面<small>水の吸収・散乱から色を計算</small></a></li>
-        <li><a href="works/koaengine.html#optics">水面を光学境界面として扱う<small>反射・屈折・コースティクス</small></a></li>
-        <li><a href="works/koaengine.html#sky">空の色を、大気の物理から計算する<small>Sky Atmosphere</small></a></li>
-        <li><a href="works/koaengine.html#cloud">雲は、密度を積分して描いている<small>Volumetric Cloud</small></a></li>
-  </ul>
-</article>
 
-<!-- SECTION 03 -->
-<section class="door" id="works">
-  <p class="door-no">SECTION 03</p>
-  <h2 class="door-title">チーム作品紹介</h2>
+    <div class="flip-head">
+      <h3>目指した海 ⇄ 再現した海</h3>
+      <div class="flip-toggle" role="group" aria-label="表示する画像">
+        <button type="button" data-flip="photo" aria-pressed="true">沖縄の写真</button>
+        <button type="button" data-flip="engine" aria-pressed="false">自作エンジン</button>
+      </div>
+    </div>
+    <div class="flips">
+        <button class="flip" type="button" aria-label="めくる：沖縄の海の写真（白い砂浜と遠浅の海）／自作エンジンで描いた浅瀬と島">
+          <span class="flip-face"><img src="assets/img/engine/okinawa-1-sm.webp" width="800" height="534" alt="沖縄の海の写真（白い砂浜と遠浅の海）" loading="lazy" decoding="async"><span class="flip-tag">写真</span></span>
+          <span class="flip-face is-back"><img src="assets/img/engine/recreated-1-sm.webp" width="800" height="450" alt="自作エンジンで描いた浅瀬と島" decoding="async"><span class="flip-tag">自作エンジン</span></span>
+        </button>
+        <button class="flip" type="button" aria-label="めくる：沖縄の海の写真（岩場のある浜辺）／自作エンジンで描いた沖の島">
+          <span class="flip-face"><img src="assets/img/engine/okinawa-2-sm.webp" width="800" height="437" alt="沖縄の海の写真（岩場のある浜辺）" loading="lazy" decoding="async"><span class="flip-tag">写真</span></span>
+          <span class="flip-face is-back"><img src="assets/img/engine/recreated-2-sm.webp" width="800" height="450" alt="自作エンジンで描いた沖の島" decoding="async"><span class="flip-tag">自作エンジン</span></span>
+        </button>
+        <button class="flip" type="button" aria-label="めくる：沖縄の海の写真（青い空と澄んだ浅瀬）／自作エンジンで描いた岩場の浅瀬">
+          <span class="flip-face"><img src="assets/img/engine/okinawa-3-sm.webp" width="800" height="533" alt="沖縄の海の写真（青い空と澄んだ浅瀬）" loading="lazy" decoding="async"><span class="flip-tag">写真</span></span>
+          <span class="flip-face is-back"><img src="assets/img/engine/recreated-3-sm.webp" width="800" height="450" alt="自作エンジンで描いた岩場の浅瀬" decoding="async"><span class="flip-tag">自作エンジン</span></span>
+        </button>
+    </div>
+    <p class="flip-note">カードをクリックすると 1 枚ずつめくれます</p>
+
+    <h3 class="skills-title">主な技術 <small class="chip is-gray">クリックで詳しく</small></h3>
+    <ul class="tree">
+        <li><a href="works/koaengine.html#rendering"><span class="tree-no">01</span><span><b>基本レンダリング</b><small>PBR・Deferred + Forward のハイブリッド</small></span></a></li>
+        <li><a href="works/koaengine.html#waves"><span class="tree-no">02</span><span><b>Gerstner Wave × FFT Ocean</b><small>近景と大規模海面のハイブリッド水面</small></span></a></li>
+        <li><a href="works/koaengine.html#water-color"><span class="tree-no">03</span><span><b>物理ベース水面</b><small>水の色を吸収・散乱の係数から計算</small></span></a></li>
+        <li><a href="works/koaengine.html#optics"><span class="tree-no">04</span><span><b>反射・屈折・コースティクス</b><small>水面を光学境界面として扱う</small></span></a></li>
+        <li><a href="works/koaengine.html#sky"><span class="tree-no">05</span><span><b>Sky Atmosphere</b><small>空の色を大気の物理から計算</small></span></a></li>
+        <li><a href="works/koaengine.html#cloud"><span class="tree-no">06</span><span><b>Volumetric Cloud</b><small>雲の密度を積分して描く</small></span></a></li>
+    </ul>
+  </article>
 </section>
 
-<article class="page reveal">
-  <p class="crumb"><span class="crumb-bar">|</span>チーム作品紹介 <small>/ 概要</small></p>
-  <h3 class="band">2024 - 2026年　個人／チーム合わせて 13 作品ほど制作</h3>
-  <p class="row-label is-green">// 1年生編</p>
-  <ul class="gallery">
-    <li><a class="tile" href="works/hansha.html"><img src="assets/img/works/y1-hansha-sm.webp" width="800" height="447" alt="反射迎撃作戦" loading="lazy" decoding="async"><span class="tile-title">反射迎撃作戦</span></a></li>
-    <li><a class="tile" href="works/nigeru.html"><img src="assets/img/works/y1-nigeru-sm.webp" width="800" height="447" alt="逃げるかかち" loading="lazy" decoding="async"><span class="tile-title">逃げるかかち</span></a></li>
-    <li><a class="tile" href="works/untitled-y1.html"><img src="assets/img/works/y1-dungeon-sm.webp" width="800" height="447" alt="1年生のときの作品のゲーム画面" loading="lazy" decoding="async"><span class="tile-title">（作品名）</span></a></li>
-    <li><a class="tile" href="works/mawarazaru.html"><img src="assets/img/works/y1-mawarazaru-sm.webp" width="800" height="449" alt="まわらザルをえない" loading="lazy" decoding="async"><span class="tile-title">まわらザルをえない</span></a></li>
-    <li><a class="tile" href="works/kunaibu.html"><img src="assets/img/works/y1-kunaibu-sm.webp" width="800" height="438" alt="クナイブ" loading="lazy" decoding="async"><span class="tile-title">クナイブ</span></a></li>
-    <li><a class="tile" href="works/chrono.html"><img src="assets/img/works/y1-chrono-sm.webp" width="800" height="450" alt="CHRONO_" loading="lazy" decoding="async"><span class="tile-title">CHRONO_</span></a></li>
-  </ul>
-  <p class="row-label is-green">// 2年生編</p>
-  <ul class="gallery">
-    <li><a class="tile" href="works/hatou.html"><img src="assets/img/works/y2-hatou-sm.webp" width="800" height="442" alt="波闘" loading="lazy" decoding="async"><span class="tile-title">波闘</span></a></li>
-    <li><a class="tile" href="works/gungagan.html"><img src="assets/img/works/y2-gungagan-sm.webp" width="800" height="447" alt="GUNGAGAN" loading="lazy" decoding="async"><span class="tile-title">GUNGAGAN</span></a></li>
-    <li><a class="tile" href="works/chainrope.html"><img src="assets/img/works/y2-chainrope-sm.webp" width="800" height="431" alt="チェインロープ" loading="lazy" decoding="async"><span class="tile-title">チェインロープ</span></a></li>
-    <li><a class="tile" href="works/biripiyo.html"><img src="assets/img/works/y2-biripiyo-sm.webp" width="800" height="450" alt="ゲキトツ！ビリぴよランブル" loading="lazy" decoding="async"><span class="tile-title">ゲキトツ！ビリぴよランブル</span></a></li>
-    <li><a class="tile" href="works/battarush.html"><img src="assets/img/works/y2-battarush-sm.webp" width="800" height="450" alt="バッタラッシュ" loading="lazy" decoding="async"><span class="tile-title">バッタラッシュ</span></a></li>
-    <li><a class="tile" href="works/reprism.html"><img src="assets/img/works/y2-reprism-sm.webp" width="800" height="412" alt="レプリズム" loading="lazy" decoding="async"><span class="tile-title">レプリズム</span></a></li>
-  </ul>
-</article>
+<!-- STAGE 2 -->
+<section class="stage" id="zukan">
+  <div class="stage-head">
+    <span class="stage-label">STAGE 2</span>
+    <h2 class="stage-title on-sea">作品ずかん</h2>
+    <p class="stage-lead">エリア：サンゴ礁 ─ 2024〜2026年に、個人／チームで作った 13 作品</p>
+  </div>
+  <div class="zukan">
+    <div class="filters" role="group" aria-label="作品の絞り込み">
+      <button type="button" data-filter="all" aria-pressed="true">ぜんぶ<i>13</i></button>
+      <button type="button" data-filter="main" aria-pressed="false">就活作品<i>1</i></button>
+      <button type="button" data-filter="y2" aria-pressed="false">2年生<i>6</i></button>
+      <button type="button" data-filter="y1" aria-pressed="false">1年生<i>6</i></button>
+    </div>
+    <ul class="cards">
+      <li class="zcard is-rare" data-slug="koaengine" data-cat="main">
+        <a href="works/koaengine.html">
+          <span class="zcard-no">No.013</span><span class="zcard-badge">★ 就活作品</span>
+          <span class="zcard-img"><img src="assets/img/engine/recreated-1-sm.webp" width="800" height="450" alt="自作エンジンで描いた浅瀬と島" loading="lazy" decoding="async"></span>
+          <span class="zcard-body">
+            <span class="zcard-title">koaEngine（自作エンジン）</span>
+            <span class="zcard-text">沖縄の海を自作ゲームエンジンで。PBR・FFT 海面・物理ベースの水の色・DXR の屈折・大気散乱・ボリュメトリック雲</span>
+            <span class="zcard-tags"><i>DirectX12</i><i>1人</i><i>約1年半</i></span>
+          </span>
+          <span class="zcard-seen">みた！</span>
+        </a>
+      </li>
+      <li class="zcard" data-slug="reprism" data-cat="y2">
+        <a href="works/reprism.html">
+          <span class="zcard-no">No.012</span>
+          <span class="zcard-img"><img src="assets/img/works/y2-reprism-sm.webp" width="800" height="412" alt="レプリズム" loading="lazy" decoding="async"></span>
+          <span class="zcard-body">
+            <span class="zcard-title">レプリズム</span>
+            <span class="zcard-text">自作エンジンで作った初めての完全 2D ゲーム</span>
+            <span class="zcard-tags"><i>2年生</i><i>CoreEngine</i><i>3人</i><i>4ヶ月</i></span>
+          </span>
+          <span class="zcard-seen">みた！</span>
+        </a>
+      </li>
+      <li class="zcard" data-slug="battarush" data-cat="y2">
+        <a href="works/battarush.html">
+          <span class="zcard-no">No.011</span><span class="zcard-badge is-wip">準備中</span>
+          <span class="zcard-img"><img src="assets/img/works/y2-battarush-sm.webp" width="800" height="450" alt="バッタラッシュ" loading="lazy" decoding="async"></span>
+          <span class="zcard-body">
+            <span class="zcard-title">バッタラッシュ</span>
+            <span class="zcard-text">紹介は準備中です。</span>
+            <span class="zcard-tags"><i>2年生</i></span>
+          </span>
+          <span class="zcard-seen">みた！</span>
+        </a>
+      </li>
+      <li class="zcard" data-slug="biripiyo" data-cat="y2">
+        <a href="works/biripiyo.html">
+          <span class="zcard-no">No.010</span>
+          <span class="zcard-img"><img src="assets/img/works/y2-biripiyo-sm.webp" width="800" height="450" alt="ゲキトツ！ビリぴよランブル" loading="lazy" decoding="async"></span>
+          <span class="zcard-body">
+            <span class="zcard-title">ゲキトツ！ビリぴよランブル</span>
+            <span class="zcard-text">回転しながら敵にゲキトツ！ UI も含めて全部ボクセルのアクション</span>
+            <span class="zcard-tags"><i>2年生</i><i>CoreEngine</i><i>3人</i><i>1ヶ月</i></span>
+          </span>
+          <span class="zcard-seen">みた！</span>
+        </a>
+      </li>
+      <li class="zcard" data-slug="chainrope" data-cat="y2">
+        <a href="works/chainrope.html">
+          <span class="zcard-no">No.009</span>
+          <span class="zcard-img"><img src="assets/img/works/y2-chainrope-sm.webp" width="800" height="431" alt="チェインロープ" loading="lazy" decoding="async"></span>
+          <span class="zcard-body">
+            <span class="zcard-title">チェインロープ</span>
+            <span class="zcard-text">アンカーポイントを目掛けてチェーンを伸ばし、ゴールを目指す</span>
+            <span class="zcard-tags"><i>2年生</i><i>DirectX12</i><i>3人</i><i>1ヶ月</i></span>
+          </span>
+          <span class="zcard-seen">みた！</span>
+        </a>
+      </li>
+      <li class="zcard" data-slug="gungagan" data-cat="y2">
+        <a href="works/gungagan.html">
+          <span class="zcard-no">No.008</span><span class="zcard-badge is-wip">準備中</span>
+          <span class="zcard-img"><img src="assets/img/works/y2-gungagan-sm.webp" width="800" height="447" alt="GUNGAGAN" loading="lazy" decoding="async"></span>
+          <span class="zcard-body">
+            <span class="zcard-title">GUNGAGAN</span>
+            <span class="zcard-text">紹介は準備中です。</span>
+            <span class="zcard-tags"><i>2年生</i></span>
+          </span>
+          <span class="zcard-seen">みた！</span>
+        </a>
+      </li>
+      <li class="zcard" data-slug="hatou" data-cat="y2">
+        <a href="works/hatou.html">
+          <span class="zcard-no">No.007</span><span class="zcard-badge is-wip">準備中</span>
+          <span class="zcard-img"><img src="assets/img/works/y2-hatou-sm.webp" width="800" height="442" alt="波闘" loading="lazy" decoding="async"></span>
+          <span class="zcard-body">
+            <span class="zcard-title">波闘</span>
+            <span class="zcard-text">紹介は準備中です。</span>
+            <span class="zcard-tags"><i>2年生</i></span>
+          </span>
+          <span class="zcard-seen">みた！</span>
+        </a>
+      </li>
+      <li class="zcard" data-slug="chrono" data-cat="y1">
+        <a href="works/chrono.html">
+          <span class="zcard-no">No.006</span>
+          <span class="zcard-img"><img src="assets/img/works/y1-chrono-sm.webp" width="800" height="450" alt="CHRONO_" loading="lazy" decoding="async"></span>
+          <span class="zcard-body">
+            <span class="zcard-title">CHRONO_</span>
+            <span class="zcard-text">時間を止めて敵をクリック。沢山連鎖させてスコアを稼ぐ</span>
+            <span class="zcard-tags"><i>1年生</i><i>学内製エンジン</i><i>3人</i><i>1ヶ月</i></span>
+          </span>
+          <span class="zcard-seen">みた！</span>
+        </a>
+      </li>
+      <li class="zcard" data-slug="kunaibu" data-cat="y1">
+        <a href="works/kunaibu.html">
+          <span class="zcard-no">No.005</span><span class="zcard-badge is-wip">準備中</span>
+          <span class="zcard-img"><img src="assets/img/works/y1-kunaibu-sm.webp" width="800" height="438" alt="クナイブ" loading="lazy" decoding="async"></span>
+          <span class="zcard-body">
+            <span class="zcard-title">クナイブ</span>
+            <span class="zcard-text">紹介は準備中です。</span>
+            <span class="zcard-tags"><i>1年生</i></span>
+          </span>
+          <span class="zcard-seen">みた！</span>
+        </a>
+      </li>
+      <li class="zcard" data-slug="mawarazaru" data-cat="y1">
+        <a href="works/mawarazaru.html">
+          <span class="zcard-no">No.004</span>
+          <span class="zcard-img"><img src="assets/img/works/y1-mawarazaru-sm.webp" width="800" height="449" alt="まわらザルをえない" loading="lazy" decoding="async"></span>
+          <span class="zcard-body">
+            <span class="zcard-title">まわらザルをえない</span>
+            <span class="zcard-text">回転するサルを操作し、タイミング良くポールをジャンプしながらゴールを目指す</span>
+            <span class="zcard-tags"><i>1年生</i><i>学内製エンジン</i><i>3人</i><i>1ヶ月</i></span>
+          </span>
+          <span class="zcard-seen">みた！</span>
+        </a>
+      </li>
+      <li class="zcard" data-slug="untitled-y1" data-cat="y1">
+        <a href="works/untitled-y1.html">
+          <span class="zcard-no">No.003</span><span class="zcard-badge is-wip">準備中</span>
+          <span class="zcard-img"><img src="assets/img/works/y1-dungeon-sm.webp" width="800" height="447" alt="1年生のときの作品のゲーム画面" loading="lazy" decoding="async"></span>
+          <span class="zcard-body">
+            <span class="zcard-title">（作品名）</span>
+            <span class="zcard-text">紹介は準備中です。</span>
+            <span class="zcard-tags"><i>1年生</i></span>
+          </span>
+          <span class="zcard-seen">みた！</span>
+        </a>
+      </li>
+      <li class="zcard" data-slug="nigeru" data-cat="y1">
+        <a href="works/nigeru.html">
+          <span class="zcard-no">No.002</span><span class="zcard-badge is-wip">準備中</span>
+          <span class="zcard-img"><img src="assets/img/works/y1-nigeru-sm.webp" width="800" height="447" alt="逃げるかかち" loading="lazy" decoding="async"></span>
+          <span class="zcard-body">
+            <span class="zcard-title">逃げるかかち</span>
+            <span class="zcard-text">紹介は準備中です。</span>
+            <span class="zcard-tags"><i>1年生</i></span>
+          </span>
+          <span class="zcard-seen">みた！</span>
+        </a>
+      </li>
+      <li class="zcard" data-slug="hansha" data-cat="y1">
+        <a href="works/hansha.html">
+          <span class="zcard-no">No.001</span><span class="zcard-badge is-wip">準備中</span>
+          <span class="zcard-img"><img src="assets/img/works/y1-hansha-sm.webp" width="800" height="447" alt="反射迎撃作戦" loading="lazy" decoding="async"></span>
+          <span class="zcard-body">
+            <span class="zcard-title">反射迎撃作戦</span>
+            <span class="zcard-text">紹介は準備中です。</span>
+            <span class="zcard-tags"><i>1年生</i></span>
+          </span>
+          <span class="zcard-seen">みた！</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- STAGE 3 -->
+<section class="stage" id="player">
+  <div class="stage-head">
+    <span class="stage-label">STAGE 3</span>
+    <h2 class="stage-title on-sea">プレイヤー情報</h2>
+    <p class="stage-lead">エリア：深海 ─ 自己紹介</p>
+  </div>
+  <article class="player card reveal">
+    <div>
+      <figure class="player-photo"><img src="assets/img/profile/photo.webp" width="640" height="850" alt="棚原 誇亜の写真" loading="lazy" decoding="async"></figure>
+      <h3 class="player-name"><small>PLAYER</small>棚原 誇亜</h3>
+    </div>
+    <div class="status">
+      <div class="status-row">
+        <p class="status-key">すきなもの<span>趣味</span></p>
+        <div class="likes"><span class="chip is-sun">LIVE</span><span class="chip is-sun">音楽を聴く</span><span class="chip is-sun">ゲーム</span><span class="chip is-sun">ボウリング</span><span class="chip is-sun">ダーツ</span><span class="chip is-sun">体を動かすこと</span></div>
+      </div>
+      <div class="status-row">
+        <p class="status-key">そうび<span>使用可能なツール</span></p>
+        <ul class="gear">
+          <li><img src="assets/img/icons/visualstudio.png" width="48" height="48" alt="">Visual Studio</li>
+          <li><img src="assets/img/icons/github.png" width="48" height="48" alt="">GitHub</li>
+          <li><img class="pixel" src="assets/img/icons/aseprite.png" width="48" height="48" alt="">Aseprite</li>
+          <li><img src="assets/img/icons/blender.png" width="48" height="48" alt="">Blender</li>
+        </ul>
+      </div>
+      <div class="status-row">
+        <p class="status-key">スキル<span>使用可能な言語</span></p>
+        <ul class="gear">
+          <li><img src="assets/img/icons/c.png" width="48" height="48" alt="">C</li>
+          <li><img src="assets/img/icons/cpp.png" width="48" height="48" alt="">C++</li>
+        </ul>
+      </div>
+    </div>
+  </article>
+</section>
 
 </main>
 
 <footer class="site-footer">
-  <p class="footer-name">棚原 誇亜 <span>KOA TANAHARA</span></p>
-  <p class="footer-links"><a href="https://github.com/tanahara0310" target="_blank" rel="noopener">GitHub</a></p>
+  <div class="thanks">
+    <p class="thanks-big">THANKS FOR PLAYING!</p>
+    <p class="thanks-name">棚原 誇亜 ／ KOA TANAHARA</p>
+    <div class="thanks-actions">
+      <a class="btn" href="#top"><span class="btn-arrow">▲</span>もう一度もぐる</a>
+      <a class="btn is-white" href="https://github.com/tanahara0310" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
   <p class="footer-note">背景の海は WebGL2 で描いています。水面の高さを波動方程式で解き、波の凸凹から屈折と集光（コースティクス）を、水深から光の吸収と散乱を計算しています。</p>
-  <p class="footer-copy">© 2026 Koa Tanahara</p>
+  <p class="footer-copy">© 2026 KOA TANAHARA</p>
 </footer>
 
 <dialog class="viewer" id="viewer" aria-label="拡大表示">
