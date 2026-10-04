@@ -30,7 +30,7 @@ function floatRects() {
   const h = window.innerHeight;
   for (const el of floaters) {
     if (out.length >= 120) break;
-    if (!el.classList.contains('is-visible')) continue;
+    if (!el.classList.contains('is-visible') && !el.classList.contains('is-emerging')) continue;
     const r = el.getBoundingClientRect();
     if (r.bottom < -200 || r.top > h + 200 || r.width === 0) continue;
     const a = Number(getComputedStyle(el).opacity);
@@ -309,12 +309,57 @@ function surface(el, delay) {
   }, delay);
 }
 
+// 深い所から水面へ。海の色に溶けた、ぼやけて揺らぐ姿から、色が抜けて大きくはっきりしていく
+const EMERGE_MS = 2800;
+const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+const smooth = (a, b, x) => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
 function emerge(el, order) {
-  const d = Math.min(order, 6) * 0.09;
-  el.style.setProperty('--d', `${d}s`);
-  el.classList.add('is-visible');
-  if (el.hasAttribute('data-float')) surface(el, 450 + d * 1000);
-  setTimeout(() => el.classList.add('is-settled'), 1500 + d * 1000);
+  const float = el.hasAttribute('data-float');
+  const dur = float ? EMERGE_MS : EMERGE_MS * 0.75;
+  const delay = Math.min(order, 8) * 160;
+  const phase = order * 1.7;
+  el.classList.add('is-emerging');
+  let start = 0;
+  let surfaced = false;
+
+  const step = (now) => {
+    if (!start) start = now;
+    const t = Math.min(1, (now - start) / dur);
+    const p = easeOut(t);
+    const k = 1 - p;
+    const sec = now / 1000;
+    const op = smooth(0, 0.3, t) * 0.5 + smooth(0.35, 0.85, t) * 0.5;
+    const pop = Math.sin(smooth(0.78, 1, t) * Math.PI);
+    const wob = k * k;
+    const y = 52 * k - pop * 6;
+    const sc = 0.82 + 0.18 * p + pop * 0.012;
+    const sx = sc * (1 + Math.cos(sec * 1.9 + phase) * 0.018 * wob);
+    const sy = sc * (1 + Math.sin(sec * 1.7 + phase) * 0.028 * wob);
+    const skew = Math.sin(sec * 2.3 + phase) * 2.4 * wob;
+    el.style.opacity = op.toFixed(3);
+    el.style.transform = `translateY(${y.toFixed(2)}px) scale(${sx.toFixed(4)}, ${sy.toFixed(4)}) skewX(${skew.toFixed(2)}deg)`;
+    el.style.filter = `blur(${(16 * Math.pow(k, 1.4)).toFixed(2)}px) saturate(${(1 + 0.4 * k).toFixed(2)})`;
+    if (float) el.style.setProperty('--tint', (0.85 * Math.pow(k, 1.1)).toFixed(3));
+    if (float && !surfaced && t > 0.8) {
+      surfaced = true;
+      surface(el, 0);
+    }
+    if (t < 1) {
+      requestAnimationFrame(step);
+      return;
+    }
+    el.classList.add('is-visible', 'is-settled');
+    el.classList.remove('is-emerging');
+    el.style.removeProperty('opacity');
+    el.style.removeProperty('transform');
+    el.style.removeProperty('filter');
+    el.style.removeProperty('--tint');
+  };
+  setTimeout(() => requestAnimationFrame(step), delay);
 }
 
 if ('IntersectionObserver' in window && !reducedMotion) {
@@ -370,6 +415,17 @@ function placeTicks() {
 
 let scrollQueued = false;
 
+// その水深の海の色（浅瀬のターコイズ → 外洋の青 → 深い紺）
+function seaTint(depth) {
+  const t = Math.min(1, Math.max(0, Math.log(depth / 1.2) / Math.log(40)));
+  const stops = [[22, 172, 178], [14, 112, 165], [8, 46, 92]];
+  const f = t * (stops.length - 1);
+  const i = Math.min(stops.length - 2, Math.floor(f));
+  const u = f - i;
+  const c = stops[i].map((v, j) => Math.round(v + (stops[i + 1][j] - v) * u));
+  return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+}
+
 function onScroll() {
   scrollQueued = false;
   const p = scrollProgress();
@@ -379,6 +435,7 @@ function onScroll() {
     ocean.setLight(lightAt(depth));
   }
   if (depthValue) depthValue.textContent = depth.toFixed(1);
+  root.style.setProperty('--sea-tint', seaTint(depth));
   if (gaugeTrack) gaugeTrack.style.setProperty('--p', p.toFixed(4));
   let here = null;
   ticks.forEach((t) => {
