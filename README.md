@@ -4,16 +4,16 @@
 
 背景の海は WebGL2 で描いています。クリック（タップ）すると波紋が広がり、スクロールするほど海が深くなります。
 
-ゲーム風のつくりです。上の HUD に Lv（解除した実績の数 + 1）・作品ずかんの発見数・水深が出ます。見た作品と実績はブラウザの localStorage（`koa.seen` / `koa.ach` / `koa.ripples`）に残ります。
+ページの板は水に浮かぶすりガラスで、その影を背景の海底に落としています。作品カードに触れると縁から波が立ち、潜った深さで案内が出ます。右端の水深計の目盛りを押すとその深さへ移動します。見た作品にはカードに「見た」の印が付きます（ブラウザの localStorage の `koa.seen`）。
 
 ## 構成
 
 ```
-index.html              トップ（表紙・STAGE 1 メインクエスト・STAGE 2 作品ずかん・STAGE 3 プレイヤー情報）
+index.html              トップ（表紙・就活作品・作品一覧・自己紹介）
 works/koaengine.html    就活作品 koaEngine
 works/*.html            チーム作品 1 本につき 1 ページ
 css/style.css           見た目
-js/main.js              波紋・HUD・実績解除・ずかんの絞り込み・カードめくり・拡大表示・動画・時刻スライダー
+js/main.js              波紋・板の影・水深計と深さの案内・絞り込み・カードめくり・拡大表示・動画・時刻スライダー
 js/ocean.js             背景の海（波の高さ場の計算と描画のシェーダー）
 assets/img/             画像（engine / works / profile / icons）
 tools/serve.py          手元で確認するためのサーバー
@@ -56,13 +56,13 @@ python tools/serve.py
 - ゲーム画面: `assets/img/works/作品名-game1.webp`（幅 1600）と `作品名-game1-sm.webp`（幅 800）を置き、`<div class="img-todo">…</div>` をコメントの例の `<img>` に置き換える
 - 動画: `data-yt=""` に YouTube の動画 ID（`watch?v=` の後ろ）を入れるとボタンが出る
 - 作品名を直したとき（`untitled-y1.html` など）は、ページ内の `（作品名）`、`index.html` の一覧の名前、前後の作品のページの「前の作品／次の作品」も直す
-- 埋めたら `index.html` の作品ずかんのカード（`data-slug="作品名"`）も直す：`準備中` のバッジ（`zcard-badge is-wip`）を消し、`zcard-text` に一言紹介、`zcard-tags` に開発環境・人数・期間を書く
+- 埋めたら `index.html` の作品一覧のカード（`data-slug="作品名"`）も直す：`is-wip` を消し、`wcard-meta` の「準備中」を開発環境・人数・期間に、`wcard-text` に一言紹介を足す
 
 ## 作品を足す
 
 1. `tools/work-template.html` を `works/英字の名前.html` にコピーして `✎` の所を埋める
-2. `index.html` の作品ずかんに `<li class="zcard" data-slug="英字の名前" data-cat="y2">…</li>` を 1 枚足す（ほかのカードをコピーして書き換える。番号は No.014 から）
-3. 作品の数を直す：`js/main.js` の `TOTAL_WORKS`、`index.html` の「13」（表紙の数字・STAGE 2 の説明・絞り込みボタンの数）、全ページの HUD の `/13`
+2. `index.html` の作品一覧に `<li class="wcard" data-float data-slug="英字の名前" data-cat="y2">…</li>` を 1 枚足す（ほかのカードをコピーして書き換える）
+3. 作品の数を直す：`index.html` の「13」（表紙の数字と作品一覧の説明）
 4. 前後の作品のページの「前の作品／次の作品」のリンクを、新しいページを指すように直す
 
 push すると、1〜2 分で GitHub Pages に反映されます。

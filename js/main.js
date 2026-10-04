@@ -22,106 +22,35 @@ function lightAt(depth) {
   return 1 - 0.5 * Math.min(1, Math.log(depth / 1.2) / Math.log(40));
 }
 
+// 水面に浮かぶ板（画面に見えているもの）の矩形を海へ渡す
+const floaters = [...document.querySelectorAll('[data-float]')];
+
+function floatRects() {
+  const out = [];
+  const h = window.innerHeight;
+  for (const el of floaters) {
+    if (out.length >= 96) break;
+    const r = el.getBoundingClientRect();
+    if (r.bottom < -200 || r.top > h + 200 || r.width === 0) continue;
+    const s = getComputedStyle(el);
+    if (s.opacity === '0' || s.display === 'none') continue;
+    out.push(r.left, r.top, r.right, r.bottom);
+  }
+  return out;
+}
+
 // 背景の海
 const canvas = document.getElementById('ocean');
 let ocean = null;
 try {
   const depth = depthAt(scrollProgress());
-  ocean = createOcean(canvas, { reducedMotion: calm, getScroll: () => window.scrollY, depth, light: lightAt(depth) });
+  ocean = createOcean(canvas, { reducedMotion: calm, getScroll: () => window.scrollY, getRects: floatRects, depth, light: lightAt(depth) });
 } catch (e) {
   console.warn('[ocean]', e);
 }
 if (!ocean) root.classList.add('no-webgl');
 
 const viewer = document.getElementById('viewer');
-
-// あそびの記録（実績・見た作品）。保存できない環境でもページは動く
-const TOTAL_WORKS = 13;
-const store = {
-  get(key, fallback) {
-    try {
-      const v = window.localStorage.getItem(`koa.${key}`);
-      return v ? JSON.parse(v) : fallback;
-    } catch {
-      return fallback;
-    }
-  },
-  set(key, value) {
-    try {
-      window.localStorage.setItem(`koa.${key}`, JSON.stringify(value));
-    } catch {
-      // 保存できなくても続ける
-    }
-  },
-};
-
-const ACHIEVEMENTS = {
-  ripple: { icon: '波', title: 'はじめての波紋', text: '水面にふれた' },
-  ripple30: { icon: '紋', title: '波紋マスター', text: '水面に 30 回ふれた' },
-  deep: { icon: '深', title: '深海に到達', text: 'いちばん下までもぐった' },
-  main: { icon: '主', title: 'メインクエスト発見', text: '就活作品のページをひらいた' },
-  seen5: { icon: '見', title: 'ずかん 5 種', text: '5 作品を見た' },
-  complete: { icon: '全', title: 'ずかんコンプリート', text: `${TOTAL_WORKS} 作品ぜんぶ見た` },
-};
-const unlocked = new Set(store.get('ach', []));
-const seen = new Set(store.get('seen', []));
-const toastBox = document.querySelector('.toasts');
-
-function showToast(a) {
-  if (!toastBox) return;
-  const el = document.createElement('div');
-  el.className = 'toast';
-  const icon = document.createElement('span');
-  icon.className = 'toast-icon';
-  icon.textContent = a.icon;
-  const body = document.createElement('div');
-  const label = document.createElement('small');
-  label.textContent = '実績解除！';
-  const title = document.createElement('b');
-  title.textContent = a.title;
-  const text = document.createElement('span');
-  text.textContent = a.text;
-  body.append(label, title, text);
-  el.append(icon, body);
-  toastBox.appendChild(el);
-  setTimeout(() => {
-    el.classList.add('is-out');
-    el.addEventListener('animationend', () => el.remove(), { once: true });
-    setTimeout(() => el.remove(), 800);
-  }, 3600);
-}
-
-function updateHud() {
-  const lv = document.querySelector('[data-hud-lv]');
-  const count = document.querySelector('[data-hud-seen]');
-  const n = Math.min(TOTAL_WORKS, seen.size);
-  if (lv) lv.textContent = String(1 + unlocked.size);
-  if (count) count.textContent = String(n);
-  root.style.setProperty('--seen', (n / TOTAL_WORKS).toFixed(3));
-  document.querySelectorAll('.zcard[data-slug]').forEach((c) => c.classList.toggle('is-seen', seen.has(c.dataset.slug)));
-}
-
-function unlock(key) {
-  if (unlocked.has(key) || !ACHIEVEMENTS[key]) return;
-  unlocked.add(key);
-  store.set('ach', [...unlocked]);
-  updateHud();
-  showToast(ACHIEVEMENTS[key]);
-}
-
-const work = document.body.dataset.work;
-if (work && work !== 'new-work') {
-  seen.add(work);
-  store.set('seen', [...seen]);
-}
-updateHud();
-setTimeout(() => {
-  if (seen.has('koaengine')) unlock('main');
-  if (seen.size >= 5) unlock('seen5');
-  if (seen.size >= TOTAL_WORKS) unlock('complete');
-}, 900);
-
-let ripples = store.get('ripples', 0);
 
 function tapRipple(x, y) {
   const el = document.createElement('span');
@@ -139,10 +68,6 @@ document.addEventListener('pointerdown', (e) => {
   } else {
     tapRipple(e.clientX, e.clientY);
   }
-  ripples++;
-  store.set('ripples', ripples);
-  unlock('ripple');
-  if (ripples >= 30) unlock('ripple30');
 }, { passive: true });
 
 // マウスを動かすと細い航跡を残す
@@ -153,6 +78,17 @@ document.addEventListener('pointermove', (e) => {
   lastTrail = { x: e.clientX, y: e.clientY };
   ocean.drop(e.clientX, e.clientY, 11, 0.07);
 }, { passive: true });
+
+// カードに触れると、浮いている板の縁から波が立つ
+document.querySelectorAll('.wcard a, .feature, .pager a, .tech a').forEach((el) => el.addEventListener('pointerenter', (e) => {
+  if (!ocean || calm || e.pointerType !== 'mouse') return;
+  const r = el.getBoundingClientRect();
+  const pts = [
+    [r.left + r.width * 0.25, r.bottom], [r.left + r.width * 0.75, r.bottom],
+    [r.left, r.top + r.height * 0.6], [r.right, r.top + r.height * 0.6],
+  ];
+  pts.forEach(([x, y], i) => setTimeout(() => ocean.drop(x, y, 16, 0.35), i * 60));
+}));
 
 // ときどき水面に何かが落ちる
 if (ocean && !calm) {
@@ -166,8 +102,82 @@ if (ocean && !calm) {
   setTimeout(() => ocean.drop(window.innerWidth * 0.5, window.innerHeight * 0.42, 40, 1.4), 700);
 }
 
-// 水深を HUD に
-const depthValue = document.querySelector('[data-hud-depth]');
+// 見た作品の印（保存できない環境でもページは動く）
+const store = {
+  get(key, fallback) {
+    try {
+      const v = window.localStorage.getItem(`koa.${key}`);
+      return v ? JSON.parse(v) : fallback;
+    } catch {
+      return fallback;
+    }
+  },
+  set(key, value) {
+    try {
+      window.localStorage.setItem(`koa.${key}`, JSON.stringify(value));
+    } catch {
+      // 保存できなくても続ける
+    }
+  },
+};
+const seen = new Set(store.get('seen', []));
+const work = document.body.dataset.work;
+if (work && work !== 'new-work') {
+  seen.add(work);
+  store.set('seen', [...seen]);
+}
+document.querySelectorAll('.wcard[data-slug]').forEach((c) => c.classList.toggle('is-seen', seen.has(c.dataset.slug)));
+
+// 潜った深さの案内
+const ZONES = [
+  { at: 3, title: '浅瀬をぬけた', text: 'サンゴ礁のあたり。光の網目が薄れていきます' },
+  { at: 10, title: '外洋へ', text: '海の色が、エメラルドから青へ' },
+  { at: 22, title: '深い青の中へ', text: '赤い光はほとんど届きません' },
+];
+const toastBox = document.querySelector('.toasts');
+let zoneShown = 0;
+while (zoneShown < ZONES.length && depthAt(scrollProgress()) >= ZONES[zoneShown].at) zoneShown++;
+
+function showZone(z) {
+  if (!toastBox) return;
+  const el = document.createElement('div');
+  el.className = 'toast';
+  const badge = document.createElement('span');
+  badge.className = 'toast-depth';
+  badge.textContent = `${z.at}m`;
+  const body = document.createElement('div');
+  body.className = 'toast-text';
+  const label = document.createElement('small');
+  label.textContent = 'DEPTH';
+  const title = document.createElement('b');
+  title.textContent = z.title;
+  const text = document.createElement('span');
+  text.textContent = z.text;
+  body.append(label, title, text);
+  el.append(badge, body);
+  toastBox.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('is-out');
+    el.addEventListener('animationend', () => el.remove(), { once: true });
+    setTimeout(() => el.remove(), 900);
+  }, 3400);
+}
+
+// 水深計
+const depthValue = document.querySelector('[data-depth-value]');
+const gaugeTrack = document.querySelector('.gauge-track');
+const ticks = [...document.querySelectorAll('[data-tick]')];
+
+function placeTicks() {
+  const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+  ticks.forEach((t) => {
+    const target = document.querySelector(t.dataset.tick);
+    if (!target) return;
+    const y = target.getBoundingClientRect().top + window.scrollY - 80;
+    t.style.setProperty('--at', Math.min(1, Math.max(0, y / max)).toFixed(4));
+  });
+}
+
 let scrollQueued = false;
 
 function onScroll() {
@@ -179,7 +189,16 @@ function onScroll() {
     ocean.setLight(lightAt(depth));
   }
   if (depthValue) depthValue.textContent = depth.toFixed(1);
-  if (p > 0.97 && document.documentElement.scrollHeight > window.innerHeight * 2) unlock('deep');
+  if (gaugeTrack) gaugeTrack.style.setProperty('--p', p.toFixed(4));
+  let here = null;
+  ticks.forEach((t) => {
+    if (p + 0.02 >= Number(t.style.getPropertyValue('--at') || 0)) here = t;
+  });
+  ticks.forEach((t) => t.classList.toggle('is-here', t === here));
+  while (zoneShown < ZONES.length && depth >= ZONES[zoneShown].at) {
+    showZone(ZONES[zoneShown]);
+    zoneShown++;
+  }
 }
 window.addEventListener('scroll', () => {
   if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(onScroll); }
@@ -192,9 +211,12 @@ window.addEventListener('resize', () => {
   requestAnimationFrame(() => {
     resizeQueued = false;
     if (ocean) ocean.resize();
+    placeTicks();
     onScroll();
   });
 });
+placeTicks();
+window.addEventListener('load', () => { placeTicks(); onScroll(); });
 onScroll();
 
 // 画面に入ったら出す
@@ -278,19 +300,19 @@ viewer.addEventListener('close', clearViewer);
 document.querySelectorAll('.timeslide').forEach((box) => {
   const range = box.querySelector('input[type=range]');
   const imgs = box.querySelectorAll('.timeslide-view img');
-  const ticks = box.querySelectorAll('.timeslide-ticks button');
+  const tickButtons = box.querySelectorAll('.timeslide-ticks button');
   let anim = 0;
 
   const apply = (v) => {
     imgs[1].style.opacity = Math.min(1, Math.max(0, v));
     imgs[2].style.opacity = Math.min(1, Math.max(0, v - 1));
-    ticks.forEach((b) => b.classList.toggle('is-active', Math.abs(Number(b.dataset.t) - v) < 0.5));
+    tickButtons.forEach((b) => b.classList.toggle('is-active', Math.abs(Number(b.dataset.t) - v) < 0.5));
   };
   range.addEventListener('input', () => {
     cancelAnimationFrame(anim);
     apply(Number(range.value));
   });
-  ticks.forEach((b) => b.addEventListener('click', () => {
+  tickButtons.forEach((b) => b.addEventListener('click', () => {
     const from = Number(range.value);
     const to = Number(b.dataset.t);
     if (reducedMotion) { range.value = to; apply(to); return; }
@@ -308,12 +330,12 @@ document.querySelectorAll('.timeslide').forEach((box) => {
   apply(0);
 });
 
-// 作品ずかんの絞り込み
+// 作品一覧の絞り込み
 const filterButtons = document.querySelectorAll('.filters [data-filter]');
 filterButtons.forEach((btn) => btn.addEventListener('click', () => {
   const f = btn.dataset.filter;
   filterButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-  document.querySelectorAll('.zcard').forEach((c) => c.classList.toggle('is-hidden', f !== 'all' && c.dataset.cat !== f));
+  document.querySelectorAll('.wcard').forEach((c) => c.classList.toggle('is-hidden', f !== 'all' && c.dataset.cat !== f));
 }));
 
 // 写真と自作エンジンのカードをめくる

@@ -53,6 +53,7 @@ void main() {
 }`;
 
 const NW = 10;
+const MAX_RECTS = 24;
 
 const RENDER_FS = `#version 300 es
 precision highp float;
@@ -69,6 +70,8 @@ uniform float uDepth;
 uniform float uPxPerM;
 uniform float uLight;
 uniform float uSimAmp;
+uniform vec4 uRects[${MAX_RECTS}];
+uniform int uRectCount;
 uniform vec4 uWaveA[${NW}];
 uniform vec2 uWaveB[${NW}];
 
@@ -164,6 +167,21 @@ vec3 sandNormal(vec2 p) {
   return normalize(vec3(-g, 1.0));
 }
 
+// 水面に浮かぶ板（ページのパネル）が海底へ落とす影。p は水面上の点（CSS px）
+float panelShadow(vec2 p, float blur) {
+  float s = 0.0;
+  for (int i = 0; i < ${MAX_RECTS}; i++) {
+    if (i >= uRectCount) break;
+    vec4 r = uRects[i];
+    vec2 c = (r.xy + r.zw) * 0.5;
+    vec2 h = (r.zw - r.xy) * 0.5 - 18.0;
+    vec2 q = abs(p - c) - h;
+    float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 18.0;
+    s = max(s, 1.0 - smoothstep(-blur, blur, d));
+  }
+  return s;
+}
+
 vec3 aces(vec3 x) {
   return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
 }
@@ -231,7 +249,9 @@ void main() {
   vec3 Esky = vec3(0.55, 0.76, 1.0) * 0.9 * uLight;
   vec3 Tdown = exp(-sigT * D / cosS);
   vec3 Tup = exp(-sigT * D);
-  vec3 Ef = Esun * cosS * Tdown * caust * lam + Esky * Tup * 0.55;
+  vec2 toSun = LsW.xy / LsW.z * D * uPxPerM;
+  float shadow = panelShadow(sp + toSun, 4.0 + D * 9.0) * 0.8 * (1.0 - smoothstep(3.0, 16.0, D));
+  vec3 Ef = Esun * cosS * Tdown * caust * lam * (1.0 - shadow) + Esky * Tup * 0.55 * (1.0 - shadow * 0.35);
   vec3 Lf = alb / PI * Ef * Tup;
   vec3 kk = sigT * (1.0 + 1.0 / cosS);
   vec3 Lin = sigS * (Esun + Esky) / (4.0 * PI) * (1.0 - exp(-kk * D)) / kk * 3.2;
@@ -314,7 +334,7 @@ function program(gl, fs) {
 
 /**
  * @param {HTMLCanvasElement} canvas
- * @param {{ reducedMotion?: boolean, getScroll: () => number, depth?: number, light?: number }} opts
+ * @param {{ reducedMotion?: boolean, getScroll: () => number, getRects?: () => number[], depth?: number, light?: number }} opts
  */
 export function createOcean(canvas, opts) {
   const gl = canvas.getContext('webgl2', {
@@ -436,6 +456,7 @@ export function createOcean(canvas, opts) {
 
   const drops = [];
   let lastScroll = opts.getScroll();
+  const rectData = new Float32Array(MAX_RECTS * 4);
   let shiftAcc = 0;
   let time = 0;
   let depth = opts.depth ?? 1.2, depthTarget = depth;
@@ -517,6 +538,12 @@ export function createOcean(canvas, opts) {
     gl.uniform1f(L.uPxPerM, pxPerM());
     gl.uniform1f(L.uLight, light);
     gl.uniform1f(L.uSimAmp, 0.03);
+    const rects = opts.getRects ? opts.getRects() : [];
+    const n = Math.min(MAX_RECTS, rects.length / 4);
+    rectData.fill(0);
+    rectData.set(rects.slice(0, n * 4));
+    gl.uniform4fv(L.uRects, rectData);
+    gl.uniform1i(L.uRectCount, n);
     gl.uniform4fv(L.uWaveA, waveA);
     gl.uniform2fv(L.uWaveB, waveB);
     quad();

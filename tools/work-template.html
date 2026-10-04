@@ -16,7 +16,7 @@
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Outfit:wght@300;400;600&display=swap">
 <link rel="stylesheet" href="../css/style.css">
 <script>document.documentElement.classList.add('js');</script>
 </head>
@@ -24,25 +24,27 @@
 <canvas id="ocean" aria-hidden="true"></canvas>
 <div class="sea-fallback" aria-hidden="true"></div>
 
-<header class="hud">
-  <a class="hud-logo" href="../index.html"><span class="hud-mark">K</span><span class="hud-name"><b>棚原 誇亜</b><small>KOA TANAHARA</small></span></a>
-  <nav class="hud-nav" aria-label="サイト内">
-    <a href="../index.html#main">メインクエスト</a>
-    <a href="../index.html#zukan" aria-current="page">作品ずかん</a>
-    <a href="../index.html#player">プレイヤー</a>
+<header class="topbar">
+  <a class="brand" href="../index.html">KOA TANAHARA</a>
+  <nav class="topnav" aria-label="サイト内">
+    <a href="../index.html#main">就活作品</a>
+    <a href="../index.html#works" aria-current="page">作品一覧</a>
+    <a href="../index.html#about">自己紹介</a>
   </nav>
-  <div class="hud-stats">
-    <span class="hud-pill is-lv" title="解除した実績の数 + 1">Lv.<b data-hud-lv>1</b></span>
-    <span class="hud-pill" title="見た作品の数">ずかん <b data-hud-seen>0</b>/13<span class="hud-bar"><i></i></span></span>
-    <span class="hud-pill is-depth" title="いまの水深">水深 <b data-hud-depth>1.2</b>m</span>
-  </div>
 </header>
 
+<aside class="gauge" aria-label="水深計">
+  <p class="gauge-value"><b data-depth-value>1.2</b><small>m</small></p>
+  <div class="gauge-track">
+    <span class="gauge-mark"></span>
+  </div>
+</aside>
+
 <nav class="dock" aria-label="サイト内">
-  <a href="../index.html"><b>▲</b>トップ</a>
-  <a href="../index.html#main"><b>★</b>メイン</a>
-  <a href="../index.html#zukan" aria-current="page"><b>■</b>ずかん</a>
-  <a href="../index.html#player"><b>●</b>プレイヤー</a>
+  <a href="../index.html"><i class="dock-ico is-top"></i>海面</a>
+  <a href="../index.html#main"><i class="dock-ico is-main"></i>就活作品</a>
+  <a href="../index.html#works" aria-current="page"><i class="dock-ico is-works"></i>作品一覧</a>
+  <a href="../index.html#about"><i class="dock-ico is-about"></i>自己紹介</a>
 </nav>
 
 <div class="toasts" aria-live="polite"></div>
@@ -50,12 +52,12 @@
 <main>
 
 <section class="work-cover is-short">
-  <p class="door-no">No.0?? ・ 2年生</p>
+  <p class="door-no">TEAM WORK ─ 2年生</p>
   <!-- ✎ 作品名。<title> と og:title も同じ名前に直す -->
   <h1 class="door-title todo-title">（作品名）</h1>
 </section>
 
-<article class="page work is-solo reveal">
+<article data-float class="page work is-solo reveal">
   <div class="work-head">
     <p class="crumb"><span class="crumb-bar">|</span>チーム作品紹介 <small>/ 2年生編</small></p>
     <!-- ✎ YouTube の動画 ID を data-yt に入れるとボタンが出る（例: data-yt="SWsgfPGlIh4"） -->
@@ -94,23 +96,18 @@
 <!-- ✎ 前後の作品へのリンク。前後の作品のページの pager も、この作品を指すように直す -->
 <nav class="pager" aria-label="作品の移動">
   <a class="pager-prev" href="前の作品.html"><small>← 前の作品</small>前の作品名</a>
-  <a class="pager-list" href="../index.html#zukan">作品一覧</a>
+  <a class="pager-list" href="../index.html#works">作品一覧</a>
   <a class="pager-next" href="次の作品.html"><small>次の作品 →</small>次の作品名</a>
 </nav>
 
 </main>
 
-<footer class="site-footer">
-  <div class="thanks">
-    <p class="thanks-big">THANKS FOR PLAYING!</p>
-    <p class="thanks-name">棚原 誇亜 ／ KOA TANAHARA</p>
-    <div class="thanks-actions">
-      <a class="btn" href="../index.html"><span class="btn-arrow">▲</span>もう一度もぐる</a>
-      <a class="btn is-white" href="https://github.com/tanahara0310" target="_blank" rel="noopener">GitHub</a>
-    </div>
-  </div>
-  <p class="footer-note">背景の海は WebGL2 で描いています。水面の高さを波動方程式で解き、波の凸凹から屈折と集光（コースティクス）を、水深から光の吸収と散乱を計算しています。</p>
-  <p class="footer-copy">© 2026 KOA TANAHARA</p>
+<footer class="foot">
+  <a class="btn" href="../index.html"><span aria-hidden="true">↑</span>海面へ浮上する</a>
+  <p class="foot-name">棚原 誇亜 ／ KOA TANAHARA</p>
+  <p class="foot-links"><a href="https://github.com/tanahara0310" target="_blank" rel="noopener">GitHub</a></p>
+  <p class="foot-note">背景の海は WebGL2 で描いています。水面の高さを波動方程式で解き、波の凸凹から屈折と集光（コースティクス）を、水深から光の吸収と散乱を計算しています。ページの板の影も、その海底に落としています。</p>
+  <p class="foot-copy">© 2026 KOA TANAHARA</p>
 </footer>
 
 <dialog class="viewer" id="viewer" aria-label="拡大表示">
