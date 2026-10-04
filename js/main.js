@@ -310,7 +310,7 @@ function surface(el, delay) {
 }
 
 // 深い所から水面へ。海の色に溶けた、ぼやけて揺らぐ姿から、色が抜けて大きくはっきりしていく
-const EMERGE_MS = 2800;
+const EMERGE_MS = 1800;
 const easeOut = (t) => 1 - Math.pow(1 - t, 3);
 const smooth = (a, b, x) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -320,7 +320,7 @@ const smooth = (a, b, x) => {
 function emerge(el, order) {
   const float = el.hasAttribute('data-float');
   const dur = float ? EMERGE_MS : EMERGE_MS * 0.75;
-  const delay = Math.min(order, 8) * 160;
+  const delay = Math.min(order, 8) * 110;
   const phase = order * 1.7;
   el.classList.add('is-emerging');
   let start = 0;
