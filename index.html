@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Outfit:wght@300;400;600&display=swap">
 <link rel="stylesheet" href="css/style.css">
-<script>document.documentElement.classList.add('js');</script>
+<script>document.documentElement.classList.add('js');setTimeout(function(){if(!window.koaReady)document.documentElement.classList.add('reveal-all');},3000);</script>
 </head>
 <body data-depth="1.2,30">
 <canvas id="ocean" aria-hidden="true"></canvas>
@@ -30,6 +30,7 @@
     <a href="#works">作品一覧</a>
     <a href="#about">自己紹介</a>
   </nav>
+  <a class="ach-chip" href="#achievements" title="実績"><span class="ach-chip-medal" aria-hidden="true"></span>実績 <b data-ach-count>0</b>/<span data-ach-total>13</span></a>
 </header>
 
 <aside class="gauge" aria-label="水深計">
@@ -40,6 +41,7 @@
     <a class="gauge-tick" href="#main" data-tick="#main">就活作品</a>
     <a class="gauge-tick" href="#works" data-tick="#works">作品一覧</a>
     <a class="gauge-tick" href="#about" data-tick="#about">自己紹介</a>
+    <a class="gauge-tick" href="#achievements" data-tick="#achievements">実績</a>
   </div>
 </aside>
 
@@ -48,6 +50,7 @@
   <a href="#main"><i class="dock-ico is-main"></i>就活作品</a>
   <a href="#works"><i class="dock-ico is-works"></i>作品一覧</a>
   <a href="#about"><i class="dock-ico is-about"></i>自己紹介</a>
+  <a href="#achievements"><i class="dock-ico is-ach"></i>実績</a>
 </nav>
 
 <div class="toasts" aria-live="polite"></div>
@@ -331,6 +334,28 @@
         </dd></div>
       </dl>
     </div>
+  </article>
+</section>
+
+<section class="sec" id="achievements">
+  <div class="sec-head">
+    <p class="kicker">ACHIEVEMENTS</p>
+    <h2 class="sec-title">実績</h2>
+    <p class="sec-lead">海にふれる・潜る・作品を見る。サイトのあちこちに実績があります</p>
+  </div>
+  <article class="glass ach" data-float>
+    <div class="ach-head">
+      <div class="ach-ring" data-ach-ring style="--rate: 0">
+        <span><b data-ach-rate>0</b><small>%</small></span>
+      </div>
+      <div class="ach-summary">
+        <p class="ach-label">解除率</p>
+        <p class="ach-count"><b data-ach-count>0</b> / <span data-ach-total>13</span> 解除</p>
+        <div class="ach-bar"><i></i></div>
+        <button class="ach-reset" type="button" data-ach-reset>記録をリセット</button>
+      </div>
+    </div>
+    <ul class="ach-grid" data-ach-grid></ul>
   </article>
 </section>
 

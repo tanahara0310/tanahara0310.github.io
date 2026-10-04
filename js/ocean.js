@@ -71,6 +71,7 @@ uniform float uPxPerM;
 uniform float uLight;
 uniform float uSimAmp;
 uniform vec4 uRects[${MAX_RECTS}];
+uniform float uRectA[${MAX_RECTS}];
 uniform int uRectCount;
 uniform vec4 uWaveA[${NW}];
 uniform vec2 uWaveB[${NW}];
@@ -177,7 +178,7 @@ float panelShadow(vec2 p, float blur) {
     vec2 h = (r.zw - r.xy) * 0.5 - 18.0;
     vec2 q = abs(p - c) - h;
     float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 18.0;
-    s = max(s, 1.0 - smoothstep(-blur, blur, d));
+    s = max(s, (1.0 - smoothstep(-blur, blur, d)) * uRectA[i]);
   }
   return s;
 }
@@ -334,7 +335,7 @@ function program(gl, fs) {
 
 /**
  * @param {HTMLCanvasElement} canvas
- * @param {{ reducedMotion?: boolean, getScroll: () => number, getRects?: () => number[], depth?: number, light?: number }} opts
+ * @param {{ reducedMotion?: boolean, getScroll: () => number, getRects?: () => number[], depth?: number, light?: number }} opts getRects は [左, 上, 右, 下, 濃さ] の並び
  */
 export function createOcean(canvas, opts) {
   const gl = canvas.getContext('webgl2', {
@@ -457,6 +458,7 @@ export function createOcean(canvas, opts) {
   const drops = [];
   let lastScroll = opts.getScroll();
   const rectData = new Float32Array(MAX_RECTS * 4);
+  const rectAlpha = new Float32Array(MAX_RECTS);
   let shiftAcc = 0;
   let time = 0;
   let depth = opts.depth ?? 1.2, depthTarget = depth;
@@ -539,10 +541,15 @@ export function createOcean(canvas, opts) {
     gl.uniform1f(L.uLight, light);
     gl.uniform1f(L.uSimAmp, 0.03);
     const rects = opts.getRects ? opts.getRects() : [];
-    const n = Math.min(MAX_RECTS, rects.length / 4);
+    const n = Math.min(MAX_RECTS, Math.floor(rects.length / 5));
     rectData.fill(0);
-    rectData.set(rects.slice(0, n * 4));
+    rectAlpha.fill(0);
+    for (let i = 0; i < n; i++) {
+      rectData.set(rects.slice(i * 5, i * 5 + 4), i * 4);
+      rectAlpha[i] = rects[i * 5 + 4];
+    }
     gl.uniform4fv(L.uRects, rectData);
+    gl.uniform1fv(L.uRectA, rectAlpha);
     gl.uniform1i(L.uRectCount, n);
     gl.uniform4fv(L.uWaveA, waveA);
     gl.uniform2fv(L.uWaveB, waveB);

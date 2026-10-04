@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Outfit:wght@300;400;600&display=swap">
 <link rel="stylesheet" href="../css/style.css">
-<script>document.documentElement.classList.add('js');</script>
+<script>document.documentElement.classList.add('js');setTimeout(function(){if(!window.koaReady)document.documentElement.classList.add('reveal-all');},3000);</script>
 </head>
 <body data-depth="3,16" data-work="chainrope">
 <canvas id="ocean" aria-hidden="true"></canvas>
@@ -30,6 +30,7 @@
     <a href="../index.html#works" aria-current="page">作品一覧</a>
     <a href="../index.html#about">自己紹介</a>
   </nav>
+  <a class="ach-chip" href="../index.html#achievements" title="実績"><span class="ach-chip-medal" aria-hidden="true"></span>実績 <b data-ach-count>0</b>/<span data-ach-total>13</span></a>
 </header>
 
 <aside class="gauge" aria-label="水深計">
@@ -44,6 +45,7 @@
   <a href="../index.html#main"><i class="dock-ico is-main"></i>就活作品</a>
   <a href="../index.html#works" aria-current="page"><i class="dock-ico is-works"></i>作品一覧</a>
   <a href="../index.html#about"><i class="dock-ico is-about"></i>自己紹介</a>
+  <a href="../index.html#achievements"><i class="dock-ico is-ach"></i>実績</a>
 </nav>
 
 <div class="toasts" aria-live="polite"></div>
