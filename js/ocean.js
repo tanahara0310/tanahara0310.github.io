@@ -162,6 +162,7 @@ vec3 sandAlbedo(vec2 p) {
   return a;
 }
 
+#if REEF
 // 海底のサンゴとイソギンチャク（p は海底の座標 m）。rgb は色、a は覆う割合、nrm は面の向き、ao は根元の暗さ
 vec4 reefSample(vec2 p, float t, float aa, out vec3 nrm, out float ao) {
   const float CELL = 1.7;
@@ -281,6 +282,7 @@ float reefShadow(vec2 p) {
   }
   return sh;
 }
+#endif
 
 // 砂紋の法線
 vec3 sandNormal(vec2 p) {
@@ -448,6 +450,7 @@ void main() {
   vec3 Ls = normalize(vec3(-0.30, -0.36, 1.0));
   vec3 LsW = normalize(vec3(Ls.xy * ETA, Ls.z));
   float lam = max(dot(sandNormal(xf), LsW), 0.0);
+#if REEF
   vec3 reefN;
   float reefAo;
   vec4 reef = reefSample(xf, t, 1.5 / uPxPerM, reefN, reefAo);
@@ -455,6 +458,9 @@ void main() {
   float reefSh = reefShadow(xf + LsW.xy / LsW.z * 0.45) * (1.0 - reef.a) * 0.75;
   lam *= 1.0 - reefSh;
   lam = mix(lam, 0.25 + 0.85 * max(dot(reefN, LsW), 0.0), reef.a);
+#else
+  vec4 reef = vec4(0.0);
+#endif
 
   // 水の吸収・散乱（Beer–Lambert と一次散乱）
   vec3 sigA = vec3(0.85, 0.080, 0.032);
@@ -468,6 +474,7 @@ void main() {
   vec3 Tup = exp(-sigT * Dr);
   vec2 toSun = LsW.xy / LsW.z * D * uPxPerM;
   float shadow = panelShadow(sp + toSun, 4.0 + D * 9.0) * 0.8;
+#if FISH
   for (int i = 0; i < ${MAX_FISH}; i++) {
     if (i >= uFishCount) break;
     vec4 A = uFishA[i];
@@ -481,6 +488,7 @@ void main() {
     float blur = (2.0 + (D - df) * 9.0) / A.w;
     shadow = max(shadow, fishSample(q, B.z, 3.0, blur, vec3(0.0, 0.0, 1.0)).a * B.w * 0.6);
   }
+#endif
   shadow *= 1.0 - smoothstep(3.0, 16.0, D);
   vec3 Ef = Esun * cosS * Tdown * caust * lam * (1.0 - shadow) + Esky * Tup * 0.55 * (1.0 - shadow * 0.35);
   vec3 Lf = alb / PI * Ef * Tup;
@@ -489,6 +497,7 @@ void main() {
   vec3 Lsub = Lf + Lin;
 
   // 魚：深さのぶん水に色を吸われ、波の屈折で揺れて見える
+#if FISH
   for (int i = 0; i < ${MAX_FISH}; i++) {
     if (i >= uFishCount) break;
     vec4 A = uFishA[i];
@@ -510,6 +519,7 @@ void main() {
     vec3 Lfish = fs.rgb * 0.8 / PI * Ef2 * Tf + Lin2;
     Lsub = mix(Lsub, Lfish, cov);
   }
+#endif
 
   // 水面の反射とサンキラ
   float NoV = max(dot(N, V), 0.0);
@@ -573,6 +583,20 @@ function compile(gl, type, src) {
   return s;
 }
 
+// 重さの段階。上から順に試し、組み立てに失敗したり重すぎたりしたら次へ
+const LEVELS = [
+  { name: 'full', reef: 1, fish: 1 },
+  { name: 'no-reef', reef: 0, fish: 1 },
+  { name: 'basic', reef: 0, fish: 0 },
+];
+
+function renderSource(level) {
+  return RENDER_FS.replace('precision highp float;', `#define REEF ${level.reef}\n#define FISH ${level.fish}\nprecision highp float;`);
+}
+
+/** 背景の海を作れなかった理由（作れたときは空） */
+export let oceanError = '';
+
 function program(gl, fs) {
   const p = gl.createProgram();
   gl.attachShader(p, compile(gl, gl.VERTEX_SHADER, VS));
@@ -600,7 +624,10 @@ export function createOcean(canvas, opts) {
     alpha: false, antialias: false, depth: false, stencil: false,
     premultipliedAlpha: false, preserveDrawingBuffer: false,
   });
-  if (!gl) return null;
+  if (!gl) {
+    oceanError = 'WebGL2 が使えない';
+    return null;
+  }
 
   const hasFloat = !!gl.getExtension('EXT_color_buffer_float');
   const hasHalf = hasFloat || !!gl.getExtension('EXT_color_buffer_half_float');
@@ -608,16 +635,50 @@ export function createOcean(canvas, opts) {
   const formats = [];
   if (hasFloat && hasFloatLinear) formats.push([gl.RGBA32F, gl.FLOAT]);
   if (hasHalf) formats.push([gl.RGBA16F, gl.HALF_FLOAT]);
-  if (!formats.length) return null;
+  if (!formats.length) {
+    oceanError = '浮動小数のテクスチャに描けない';
+    return null;
+  }
 
   let sim, drop, render;
+  let level = 0;
+  const errors = [];
   try {
     sim = program(gl, SIM_FS);
     drop = program(gl, DROP_FS);
-    render = program(gl, RENDER_FS);
   } catch (e) {
+    oceanError = String(e.message || e);
     console.warn('[ocean]', e);
     return null;
+  }
+  for (; level < LEVELS.length; level++) {
+    try {
+      render = program(gl, renderSource(LEVELS[level]));
+      break;
+    } catch (e) {
+      errors.push(`${LEVELS[level].name}: ${e.message || e}`);
+      console.warn('[ocean]', LEVELS[level].name, e);
+    }
+  }
+  if (!render) {
+    oceanError = errors.join(' / ');
+    return null;
+  }
+
+  // 一段軽い描画へ切り替える
+  function lighten() {
+    for (let next = level + 1; next < LEVELS.length; next++) {
+      try {
+        const p = program(gl, renderSource(LEVELS[next]));
+        gl.deleteProgram(render.p);
+        render = p;
+        level = next;
+        return true;
+      } catch (e) {
+        errors.push(`${LEVELS[next].name}: ${e.message || e}`);
+      }
+    }
+    return false;
   }
 
   const vao = gl.createVertexArray();
@@ -834,6 +895,8 @@ export function createOcean(canvas, opts) {
   let light = opts.light ?? 1, lightTarget = light;
   let last = performance.now();
   let frameAcc = 0, frameCount = 0;
+  let lastAvg = 0;
+  let lost = false;
   let raf = 0;
   let alive = true;
 
@@ -935,10 +998,13 @@ export function createOcean(canvas, opts) {
       if (frameCount >= 60) {
         const avg = frameAcc / frameCount;
         frameAcc = 0; frameCount = 0;
+        lastAvg = avg;
         if (avg > 22 && quality > 0.45) {
           quality *= 0.8;
           resize();
           if (quality <= 0.45) document.documentElement.classList.add('low-fx');
+        } else if (avg > 28 && quality <= 0.45) {
+          lighten();
         }
       }
     }
@@ -947,9 +1013,13 @@ export function createOcean(canvas, opts) {
   canvas.addEventListener('webglcontextlost', (e) => {
     e.preventDefault();
     alive = false;
+    lost = true;
+    oceanError = 'GPU の描画が止まった（コンテキスト喪失）';
     cancelAnimationFrame(raf);
     document.documentElement.classList.add('no-webgl');
   });
+  // 戻ってきたら作り直す（ページを読み直す）
+  canvas.addEventListener('webglcontextrestored', () => window.location.reload());
 
   raf = requestAnimationFrame(frame);
 
@@ -976,5 +1046,18 @@ export function createOcean(canvas, opts) {
     setLight(l) { lightTarget = l; },
     resize,
     get format() { return fmt && (fmt[1] === gl.FLOAT ? 'RGBA32F' : 'RGBA16F'); },
+    /** 調べるための状態 */
+    status() {
+      const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+      return {
+        level: LEVELS[level].name,
+        gpu: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
+        canvas: `${canvas.width}x${canvas.height}`,
+        quality: quality.toFixed(2),
+        frameMs: lastAvg.toFixed(1),
+        lost,
+        errors: errors.join(' / '),
+      };
+    },
   };
 }

@@ -1,4 +1,4 @@
-import { createOcean } from './ocean.js';
+import { createOcean, oceanError } from './ocean.js?v=202610070047';
 
 const root = document.documentElement;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -50,6 +50,24 @@ try {
   console.warn('[ocean]', e);
 }
 if (!ocean) root.classList.add('no-webgl');
+
+// ?debug を付けると背景の海の状態を画面に出す
+if (new URLSearchParams(window.location.search).has('debug')) {
+  const box = document.createElement('pre');
+  box.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:99;margin:0;padding:8px 10px;max-width:calc(100vw - 16px);white-space:pre-wrap;font:11px/1.5 monospace;color:#fff;background:rgba(0,0,0,.75);border-radius:8px;pointer-events:none';
+  document.body.appendChild(box);
+  const show = () => {
+    const st = ocean ? ocean.status() : null;
+    box.textContent = st
+      ? `海: ${st.level}${st.lost ? '（止まった）' : ''}
+GPU: ${st.gpu}
+描画: ${st.canvas}・品質 ${st.quality}・${st.frameMs}ms/フレーム${st.errors ? `
+失敗: ${st.errors}` : ''}`
+      : `海: 描けない（${oceanError || '理由不明'}）`;
+  };
+  show();
+  setInterval(show, 1000);
+}
 
 const viewer = document.getElementById('viewer');
 

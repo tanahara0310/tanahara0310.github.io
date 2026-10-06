@@ -19,6 +19,7 @@ js/main.js              波紋・板の浮き沈みと影・水深計・実績�
 js/ocean.js             背景の海（波の高さ場の計算と描画のシェーダー）
 assets/img/             画像（engine / works / profile / icons）
 tools/serve.py          手元で確認するためのサーバー
+tools/bump.py           JS と CSS の版番号を新しくする
 tools/work-template.html  新しい作品のページの雛形
 ```
 
@@ -67,4 +68,14 @@ python tools/serve.py
 3. 作品の数を直す：`index.html` の「13」（表紙の数字と作品一覧の説明）と、`js/main.js` の `ALL_WORKS`（全作品制覇の実績に使う）に英字の名前を足す
 4. 前後の作品のページの「前の作品／次の作品」のリンクを、新しいページを指すように直す
 
+## 公開する
+
+JS や CSS を変えたら、push の前に版番号を新しくします（見る人のブラウザが古いファイルを使い続けないように）。
+
+```bash
+python tools/bump.py
+```
+
 push すると、1〜2 分で GitHub Pages に反映されます。
+
+背景の海がうまく出ないときは、URL の後ろに `?debug` を付けて開くと、描いている段階（full／no-reef／basic）・GPU・失敗した理由が左下に出ます。重い端末では自動でサンゴ → 魚の順に外して軽くします。
