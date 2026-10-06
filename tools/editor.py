@@ -177,7 +177,7 @@ def pages_status():
     if not shutil.which("gh"):
         return {"status": "unknown"}
     code, url = git("remote", "get-url", "origin")
-    m = re.search(r"github\.com[:/]([^/]+/[^/.]+)", url)
+    m = re.search(r"github\.com[:/]([^/]+/[^/]+?)(?:\.git)?/?$", url.strip())
     if code or not m:
         return {"status": "unknown"}
     r = subprocess.run(["gh", "api", f"repos/{m.group(1)}/pages/builds/latest", "--jq", ".status + \"\\t\" + .commit"],
