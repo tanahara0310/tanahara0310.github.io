@@ -194,19 +194,22 @@ vec4 over(vec4 top, vec4 bot) {
   return vec4(c, a);
 }
 
-// 上から見た魚（体長 1・鼻先が +0.5・尾びれの先が -0.74）。rgb は色、a は覆う割合
+// 胴の半幅：丸い頭、太い胸、細い尾の付け根
+float bodyW(float x) {
+  return x > 0.08 ? 0.19 * sqrt(max(0.0, 1.0 - pow((x - 0.08) / 0.42, 2.0)))
+                  : 0.035 + 0.155 * pow(smoothstep(-0.44, 0.08, x), 0.6);
+}
+
+// 上から見た魚（体長 1・鼻先が +0.5・尾びれの先が -0.74）。rgb は色、a は覆う割合。L は魚の向きでの光の向き
 // kind: 0 黄色い魚、1 青い体に黄色の尾、2 クマノミ、3 大きな魚影
-vec4 fishSample(vec2 q, float tail, float kind, float aa) {
+vec4 fishSample(vec2 q, float tail, float kind, float aa, vec3 L) {
   if (q.x > 0.56 + aa || q.x < -0.8 - aa || abs(q.y) > 0.42 + aa) return vec4(0.0);
 
   // 体のうねり：頭はほとんど動かず、尾に向かって大きく振れる
   float back = clamp(0.5 - q.x, 0.0, 1.3);
   vec2 b = vec2(q.x, q.y - sin(tail - q.x * 6.0) * 0.085 * back * back);
 
-  // 胴：丸い頭、太い胸、細い尾の付け根
-  float wHead = 0.19 * sqrt(max(0.0, 1.0 - pow((b.x - 0.08) / 0.42, 2.0)));
-  float wTail = 0.035 + 0.155 * pow(smoothstep(-0.44, 0.08, b.x), 0.6);
-  float w = b.x > 0.08 ? wHead : wTail;
+  float w = bodyW(b.x);
   float body = (1.0 - smoothstep(-aa, aa, abs(b.y) - w)) * smoothstep(-0.44 - aa, -0.44 + aa, b.x);
 
   // 尾びれ：根元から広がり、先が二股に割れる
@@ -223,13 +226,19 @@ vec4 fishSample(vec2 q, float tail, float kind, float aa) {
   float ca = cos(flap), sa = sin(flap) * side;
   pf = vec2(ca * pf.x + sa * pf.y, -sa * pf.x + ca * pf.y);
   float pect = 1.0 - smoothstep(-aa, aa, (length(pf / vec2(0.12, 0.05)) - 1.0) * 0.05);
+  float pectRay = 0.8 + 0.2 * cos(atan(pf.y, pf.x + 0.12) * 28.0);
 
   // 目
   float eye = 1.0 - smoothstep(-aa, aa, length(vec2(b.x - 0.34, abs(b.y) - 0.1)) - 0.034);
 
-  // 丸み：背中の中央を明るく、縁を暗く
-  float n = clamp(abs(b.y) / max(w, 1e-3), 0.0, 1.0);
-  float shade = 0.62 + 0.5 * sqrt(1.0 - n * n);
+  // 厚み：断面を楕円とみなした胴の高さから法線を出し、水中の太陽で照らす
+  float h = sqrt(max(w * w - b.y * b.y, 1e-5));
+  float dwdx = (bodyW(b.x + 0.01) - bodyW(b.x - 0.01)) / 0.02;
+  vec3 nrm = normalize(vec3(-clamp(0.9 * w * dwdx / h, -4.0, 4.0), clamp(0.9 * b.y / h, -4.0, 4.0), 1.0));
+  float wrap = max((dot(nrm, L) + 0.35) / 1.35, 0.0);
+  float shade = 0.28 + 0.95 * wrap * wrap;
+  float gloss = pow(max(dot(nrm, normalize(L + vec3(0.0, 0.0, 1.0))), 0.0), 36.0) * 1.1;
+  float tailRay = 0.82 + 0.18 * cos(b.y / max(wt, 0.01) * 9.0);
 
   vec3 cBody, cFin, cTail;
   if (kind < 0.5) {
@@ -261,10 +270,12 @@ vec4 fishSample(vec2 q, float tail, float kind, float aa) {
     cTail = cBody;
   }
 
-  vec4 col = vec4(cTail, fin * 0.9);
-  col = over(vec4(cFin, pect * 0.75), col);
-  col = over(vec4(cBody * shade, body), col);
-  col = over(vec4(vec3(0.02), eye * body * step(kind, 2.5)), col);
+  float isFish = step(kind, 2.5);
+  vec4 col = vec4(cTail * mix(1.0, tailRay, isFish) * (0.75 + 0.25 * wrap), fin * 0.85);
+  col = over(vec4(cFin * mix(1.0, pectRay, isFish) * 0.95, pect * 0.7), col);
+  col = over(vec4(cBody * shade + gloss * isFish, body), col);
+  float eyeHi = 1.0 - smoothstep(0.0, 0.012, length(vec2(b.x - 0.35, abs(b.y) - 0.09) - L.xy * 0.012));
+  col = over(vec4(mix(vec3(0.02), vec3(1.6), eyeHi), eye * body * isFish), col);
   return col;
 }
 
@@ -348,7 +359,7 @@ void main() {
     vec2 dir = vec2(cos(A.z), sin(A.z));
     vec2 q = vec2(dot(ps, dir), dot(ps, vec2(-dir.y, dir.x))) / A.w;
     float blur = (2.0 + (D - df) * 9.0) / A.w;
-    shadow = max(shadow, fishSample(q, B.z, 3.0, blur).a * B.w * 0.6);
+    shadow = max(shadow, fishSample(q, B.z, 3.0, blur, vec3(0.0, 0.0, 1.0)).a * B.w * 0.6);
   }
   shadow *= 1.0 - smoothstep(3.0, 16.0, D);
   vec3 Ef = Esun * cosS * Tdown * caust * lam * (1.0 - shadow) + Esky * Tup * 0.55 * (1.0 - shadow * 0.35);
@@ -369,7 +380,8 @@ void main() {
     vec2 dir = vec2(cos(A.z), sin(A.z));
     vec2 q = vec2(dot(pv, dir), dot(pv, vec2(-dir.y, dir.x))) / A.w;
     float aa = (1.0 + df * 2.5) / A.w;
-    vec4 fs = fishSample(q, B.z, B.x, aa);
+    vec3 Lf3 = normalize(vec3(dot(LsW.xy, dir), dot(LsW.xy, vec2(-dir.y, dir.x)), LsW.z * 0.55));
+    vec4 fs = fishSample(q, B.z, B.x, aa, Lf3);
     float cov = fs.a * B.w;
     if (cov <= 0.0) continue;
     vec3 Tf = exp(-sigT * df);
@@ -607,7 +619,7 @@ export function createOcean(canvas, opts) {
         fish.push({
           school, kind,
           x: cx + (frand() - 0.5) * 170, y: cy + (frand() - 0.5) * 120, h: school.h,
-          lenM: (kind === 2 ? 0.27 : 0.33) * (0.85 + frand() * 0.3),
+          lenM: (kind === 2 ? 0.3 : 0.37) * (0.85 + frand() * 0.3),
           depthFrac: 0.35 + frand() * 0.45, depthMax: 3.2,
           base: 0.28 + frand() * 0.12, phase: frand() * 6, jitter: frand() * 6.28,
           flee: 0, fx: 0, fy: 0,
