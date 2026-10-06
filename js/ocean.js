@@ -162,6 +162,126 @@ vec3 sandAlbedo(vec2 p) {
   return a;
 }
 
+// 海底のサンゴとイソギンチャク（p は海底の座標 m）。rgb は色、a は覆う割合、nrm は面の向き、ao は根元の暗さ
+vec4 reefSample(vec2 p, float t, float aa, out vec3 nrm, out float ao) {
+  const float CELL = 1.7;
+  vec2 c0 = floor(p / CELL);
+  vec4 res = vec4(0.0);
+  nrm = vec3(0.0, 0.0, 1.0);
+  ao = 1.0;
+  for (int j = -1; j <= 1; j++) {
+    for (int i = -1; i <= 1; i++) {
+      vec2 id = c0 + vec2(float(i), float(j));
+      float dens = smoothstep(0.32, 0.68, vnoise(id * 0.33 + 7.0));
+      vec2 h = hash22(id + 91.0);
+      if (h.x > 0.12 + 0.6 * dens) continue;
+      vec2 ctr = (id + 0.2 + 0.6 * hash22(id + 3.0)) * CELL;
+      float kind = floor(h.y * 4.0);
+      float r = mix(0.34, 0.72, hash12(id + 11.0)) * (kind > 2.5 ? 0.72 : 1.0);
+      vec2 v = p - ctr;
+      float d = length(v);
+      if (d > r * 1.8) continue;
+      ao = min(ao, mix(0.55, 1.0, smoothstep(r * 0.85, r * 1.7, d)));
+      if (d > r * 1.15) continue;
+      float ang = atan(v.y, v.x);
+      float tint = hash12(id + 23.0);
+      vec3 col;
+      vec3 n;
+      float cov;
+      if (kind < 0.5) {
+        // ノウサンゴ：丸いドームに迷路のような溝
+        float s2 = clamp(d / r, 0.0, 1.0);
+        float hgt = sqrt(1.0 - s2 * s2);
+        n = normalize(vec3(v / r, max(hgt, 0.15)));
+        float m = sin(dot(v, vec2(0.8, 0.6)) * 46.0 + vnoise(v * 7.0 + id) * 9.0);
+        col = mix(vec3(0.85, 0.62, 0.3), vec3(0.62, 0.72, 0.36), tint) * (0.68 + 0.32 * smoothstep(-0.4, 0.6, m));
+        cov = 1.0 - smoothstep(r - aa, r + aa, d);
+      } else if (kind < 1.5) {
+        // 枝サンゴ：コブがぎっしり詰まった塊。コブごとに丸みの陰影、すき間は暗い
+        vec2 g = v / 0.085;
+        vec2 gi = floor(g);
+        float best = 9.0;
+        vec2 bv = vec2(0.0);
+        vec2 bid = vec2(0.0);
+        for (int bj = -1; bj <= 1; bj++) {
+          for (int bi = -1; bi <= 1; bi++) {
+            vec2 o = vec2(float(bi), float(bj));
+            vec2 cpt = o + 0.5 + (hash22(gi + o + id) - 0.5) * 0.6 - fract(g);
+            float dd = length(cpt);
+            if (dd < best) { best = dd; bv = cpt; bid = gi + o; }
+          }
+        }
+        float bump = 1.0 - smoothstep(0.35, 0.62, best);
+        float edge = r * (0.8 + 0.28 * vnoise(vec2(ang * 2.5, tint * 9.0)));
+        float hgt = sqrt(max(0.0, 1.0 - pow(best / 0.62, 2.0)));
+        vec3 base = tint < 0.33 ? vec3(1.0, 0.36, 0.55) : (tint < 0.66 ? vec3(0.78, 0.32, 0.88) : vec3(1.0, 0.56, 0.22));
+        base *= (0.85 + 0.25 * hash12(bid + 5.0)) * (0.85 + 0.3 * vnoise(v * 4.0 + id));
+        col = mix(base * 0.22, base * (0.55 + 0.35 * hgt), bump);
+        n = normalize(vec3(-bv * 0.8 * bump, max(hgt, 0.5)));
+        cov = 1.0 - smoothstep(edge - aa, edge + aa, d);
+      } else if (kind < 2.5) {
+        // テーブルサンゴ：平たい皿に放射状のすじ
+        float edge = r * (0.9 + 0.1 * sin(ang * 9.0 + tint * 6.0));
+        float rib = 0.85 + 0.15 * sin(ang * 70.0);
+        col = mix(vec3(0.62, 0.7, 0.36), vec3(0.85, 0.6, 0.4), tint) * rib * (0.85 + 0.25 * smoothstep(0.6 * r, edge, d));
+        n = normalize(vec3(v / r * 0.25, 1.0));
+        cov = 1.0 - smoothstep(edge - aa, edge + aa, d);
+      } else {
+        // イソギンチャク：長い触手と短い触手の 2 段がふさふさと揺れる。触手 1 本ずつに丸みの陰影、すき間は暗い
+        float sway = sin(t * 1.6 + d * 8.0 + tint * 20.0) * 0.2 * (d / r);
+        float a2 = ang + sway;
+        vec3 tcol = tint < 0.4 ? vec3(0.78, 0.2, 0.7) : (tint < 0.75 ? vec3(0.3, 0.75, 0.32) : vec3(0.92, 0.32, 0.45));
+        float lenA = r * (0.88 + 0.12 * sin(a2 * 5.0 + tint * 30.0));
+        float lenB = lenA * 0.72;
+        float csA = cos(a2 * 20.0);
+        float csB = cos(a2 * 20.0 + 3.14159);
+        float tA = smoothstep(-0.3, 0.25, csA) * (1.0 - smoothstep(lenA - aa, lenA + aa, d));
+        float tB = smoothstep(-0.3, 0.25, csB) * (1.0 - smoothstep(lenB - aa, lenB + aa, d));
+        float rA = sqrt(clamp((csA + 0.3) / 1.3, 0.0, 1.0));
+        float rB = sqrt(clamp((csB + 0.3) / 1.3, 0.0, 1.0));
+        float under = 1.0 - smoothstep(lenB * 0.95 - aa, lenB * 0.95 + aa, d);
+        float disk = 1.0 - smoothstep(r * 0.2 - aa, r * 0.2 + aa, d);
+        float tipA = smoothstep(lenA * 0.86, lenA, d);
+        vec3 cA = tcol * (0.3 + 0.75 * rA) * (1.0 + 0.5 * tipA);
+        vec3 cB = tcol * (0.3 + 0.75 * rB) * 0.9;
+        vec3 c = tcol * 0.18;
+        c = mix(c, cA, tA * (1.0 - tB));
+        c = mix(c, cB, tB);
+        float mouth = 1.0 - smoothstep(0.015, 0.04, d);
+        col = mix(c, mix(vec3(0.85, 0.48, 0.25), vec3(0.3, 0.08, 0.08), mouth), disk);
+        cov = max(max(disk, under), max(tA, tB));
+        vec2 side = vec2(-sin(a2), cos(a2)) * sin(a2 * 20.0) * 0.7;
+        n = normalize(vec3(v / r * 0.5 + side * (1.0 - disk), 1.0));
+      }
+      if (cov > res.a) {
+        res = vec4(col, cov);
+        nrm = n;
+      }
+    }
+  }
+  return res;
+}
+
+// サンゴとイソギンチャクが砂地に落とす影（形は丸で近似）
+float reefShadow(vec2 p) {
+  const float CELL = 1.7;
+  vec2 c0 = floor(p / CELL);
+  float sh = 0.0;
+  for (int j = -1; j <= 1; j++) {
+    for (int i = -1; i <= 1; i++) {
+      vec2 id = c0 + vec2(float(i), float(j));
+      float dens = smoothstep(0.32, 0.68, vnoise(id * 0.33 + 7.0));
+      vec2 h = hash22(id + 91.0);
+      if (h.x > 0.12 + 0.6 * dens) continue;
+      vec2 ctr = (id + 0.2 + 0.6 * hash22(id + 3.0)) * CELL;
+      float kind = floor(h.y * 4.0);
+      float r = mix(0.34, 0.72, hash12(id + 11.0)) * (kind > 2.5 ? 0.72 : 1.0);
+      sh = max(sh, 1.0 - smoothstep(r * 0.6, r * 1.05, length(p - ctr)));
+    }
+  }
+  return sh;
+}
+
 // 砂紋の法線
 vec3 sandNormal(vec2 p) {
   vec2 dir = normalize(vec2(0.8, 0.6));
@@ -201,7 +321,7 @@ float bodyW(float x) {
 }
 
 // 上から見た魚（体長 1・鼻先が +0.5・尾びれの先が -0.74）。rgb は色、a は覆う割合。L は魚の向きでの光の向き
-// kind: 0 黄色い魚、1 青い体に黄色の尾、2 クマノミ、3 大きな魚影
+// kind: 1 青い体に黄色の尾、2 クマノミ、3 大きな魚影
 vec4 fishSample(vec2 q, float tail, float kind, float aa, vec3 L) {
   if (q.x > 0.56 + aa || q.x < -0.8 - aa || abs(q.y) > 0.42 + aa) return vec4(0.0);
 
@@ -239,11 +359,7 @@ vec4 fishSample(vec2 q, float tail, float kind, float aa, vec3 L) {
   float tailRay = 0.82 + 0.18 * cos(b.y / max(wt, 0.01) * 9.0);
 
   vec3 cBody, cFin, cTail;
-  if (kind < 0.5) {
-    cBody = vec3(1.0, 0.80, 0.04);
-    cFin = vec3(1.0, 0.88, 0.25);
-    cTail = cBody;
-  } else if (kind < 1.5) {
+  if (kind < 1.5) {
     cBody = vec3(0.07, 0.27, 0.92);
     float stripe = (1.0 - smoothstep(0.045, 0.075, abs(b.y))) * smoothstep(-0.36, -0.2, b.x) * smoothstep(0.38, 0.22, b.x);
     cBody = mix(cBody, vec3(0.02, 0.04, 0.16), stripe);
@@ -332,6 +448,13 @@ void main() {
   vec3 Ls = normalize(vec3(-0.30, -0.36, 1.0));
   vec3 LsW = normalize(vec3(Ls.xy * ETA, Ls.z));
   float lam = max(dot(sandNormal(xf), LsW), 0.0);
+  vec3 reefN;
+  float reefAo;
+  vec4 reef = reefSample(xf, t, 1.5 / uPxPerM, reefN, reefAo);
+  alb = mix(alb * reefAo, reef.rgb, reef.a);
+  float reefSh = reefShadow(xf + LsW.xy / LsW.z * 0.45) * (1.0 - reef.a) * 0.75;
+  lam *= 1.0 - reefSh;
+  lam = mix(lam, 0.25 + 0.85 * max(dot(reefN, LsW), 0.0), reef.a);
 
   // 水の吸収・散乱（Beer–Lambert と一次散乱）
   vec3 sigA = vec3(0.85, 0.080, 0.032);
@@ -340,8 +463,9 @@ void main() {
   float cosS = LsW.z;
   vec3 Esun = vec3(1.0, 0.96, 0.90) * 3.8 * uLight;
   vec3 Esky = vec3(0.55, 0.76, 1.0) * 0.9 * uLight;
-  vec3 Tdown = exp(-sigT * D / cosS);
-  vec3 Tup = exp(-sigT * D);
+  float Dr = D - reef.a * min(D * 0.7, 0.9);
+  vec3 Tdown = exp(-sigT * Dr / cosS);
+  vec3 Tup = exp(-sigT * Dr);
   vec2 toSun = LsW.xy / LsW.z * D * uPxPerM;
   float shadow = panelShadow(sp + toSun, 4.0 + D * 9.0) * 0.8;
   for (int i = 0; i < ${MAX_FISH}; i++) {
@@ -361,7 +485,7 @@ void main() {
   vec3 Ef = Esun * cosS * Tdown * caust * lam * (1.0 - shadow) + Esky * Tup * 0.55 * (1.0 - shadow * 0.35);
   vec3 Lf = alb / PI * Ef * Tup;
   vec3 kk = sigT * (1.0 + 1.0 / cosS);
-  vec3 Lin = sigS * (Esun + Esky) / (4.0 * PI) * (1.0 - exp(-kk * D)) / kk * 3.2;
+  vec3 Lin = sigS * (Esun + Esky) / (4.0 * PI) * (1.0 - exp(-kk * Dr)) / kk * 3.2;
   vec3 Lsub = Lf + Lin;
 
   // 魚：深さのぶん水に色を吸われ、波の屈折で揺れて見える
@@ -604,7 +728,7 @@ export function createOcean(canvas, opts) {
     schools.length = 0;
     const W = viewW || window.innerWidth;
     const H = viewH || window.innerHeight;
-    const kinds = [0, 1, 2, 1, 0];
+    const kinds = [1, 2, 1, 2, 1];
     kinds.forEach((kind) => {
       const school = { h: frand() * Math.PI * 2, turn: 0, next: 0 };
       schools.push(school);
