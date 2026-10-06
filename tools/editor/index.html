@@ -25,6 +25,8 @@
 
 <div class="layout">
   <aside class="side">
+    <p class="side-head">ページ</p>
+    <ul class="list is-pages" data-pages></ul>
     <p class="side-head">作品 <small>上から順にトップの一覧に並びます（ドラッグで並べ替え）</small></p>
     <ul class="list" data-list></ul>
     <button class="btn is-add" type="button" data-add>＋ 作品を追加</button>
@@ -34,7 +36,7 @@
 
   <section class="preview">
     <div class="preview-bar">
-      <div class="seg" role="group" aria-label="プレビューするページ">
+      <div class="seg" role="group" aria-label="プレビューするページ" data-pv-pages>
         <button type="button" data-pv-page="work" aria-pressed="true">作品ページ</button>
         <button type="button" data-pv-page="index" aria-pressed="false">トップの一覧</button>
       </div>
@@ -81,6 +83,15 @@
     <p class="git-help">「コミット」は手元に記録するだけです。「公開」で GitHub に送ると、1〜2 分で <a href="https://tanahara0310.github.io/" target="_blank" rel="noopener">tanahara0310.github.io</a> に反映されます。</p>
   </aside>
 </div>
+
+<form class="ask" data-ask hidden>
+  <div class="ask-box">
+    <h2>YouTube の動画</h2>
+    <p class="ask-hint" data-ask-hint></p>
+    <input type="url" data-ask-input placeholder="https://www.youtube.com/watch?v=...">
+    <div class="git-row"><button class="btn is-primary" type="submit">変える</button><button class="btn is-ghost" type="button" data-ask-cancel>やめる</button></div>
+  </div>
+</form>
 
 <div class="toasts" data-toasts aria-live="polite"></div>
 <input type="file" data-file hidden>

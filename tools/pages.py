@@ -9,6 +9,8 @@ import os
 import re
 from html.parser import HTMLParser
 
+import inline
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_PATH = os.path.join(ROOT, "content", "works.json")
 SITE_URL = "https://tanahara0310.github.io"
@@ -456,18 +458,29 @@ def build(data, write=True):
     for w in works:
         if is_team_page(w):
             files[f"works/{w['slug']}.html"] = render_work(w, works, ver)
-    files["index.html"] = render_index(read(os.path.join(ROOT, "index.html")), works)
+    files["index.html"] = render_index(inline.annotate(read(os.path.join(ROOT, "index.html"))), works)
     files["js/main.js"] = render_main_js(read(os.path.join(ROOT, "js", "main.js")), works)
     mains = [w for w in works if w.get("kind") == "main"]
     if mains:
         p = f"works/{mains[0]['slug']}.html"
-        files[p] = render_main_page(read(os.path.join(ROOT, p)), works)
+        files[p] = render_main_page(inline.annotate(read(os.path.join(ROOT, p))), works)
     changed = []
     if write:
         for rel, text in files.items():
             if write_if_changed(os.path.join(ROOT, rel), text):
                 changed.append(rel)
     return files, changed
+
+
+def hand_pages(data):
+    """手書きのページ（エディタではプレビューを直接書き換える）"""
+    mains = [w for w in data["works"] if w.get("kind") == "main"]
+    return ["index.html"] + [f"works/{w['slug']}.html" for w in mains[:1]]
+
+
+def prefix_of(rel):
+    """ページから見たサイトの根元"""
+    return "../" * rel.count("/")
 
 
 def referenced_images(data):

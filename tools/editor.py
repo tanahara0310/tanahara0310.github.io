@@ -18,17 +18,19 @@ import urllib.parse
 import webbrowser
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import inline  # noqa: E402  tools/inline.py
 import pages as portfolio  # noqa: E402  tools/pages.py
 
 ROOT = portfolio.ROOT
 WORKS_IMG = "assets/img/works"
+SITE_IMG = "assets/img/site"
 VIDEO_DIR = "assets/video"
 MAX_VIDEO = 95 * 1024 * 1024  # GitHub は 100MB を超えるファイルを受け付けない
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp"}
 VIDEO_EXT = {".mp4", ".webm", ".mov"}
 
 lock = threading.Lock()
-drafts = {"works": None}
+drafts = {"works": None, "pages": {}}
 
 try:
     from PIL import Image
@@ -37,13 +39,13 @@ except ImportError:  # Pillow が無いと画像を変換できない
 
 
 # ===== 画像と動画 =====
-def save_image(data, slug, slot):
+def save_image(data, slug, slot, folder=WORKS_IMG):
     """画像を幅 1600 と 800 の webp にして保存し、データ用の {src, w, h} を返す"""
     if Image is None:
         raise RuntimeError("画像の変換に Pillow が要ります（pip install pillow）")
     digest = hashlib.sha1(data).hexdigest()[:6]
     name = f"{slug}-{slot}-{digest}"
-    big = f"{WORKS_IMG}/{name}.webp"
+    big = f"{folder}/{name}.webp"
     with Image.open(io.BytesIO(data)) as im:
         im.load()
         if getattr(im, "is_animated", False):
@@ -54,7 +56,7 @@ def save_image(data, slug, slot):
         w, h = im.size
         large = im if w <= 1600 else im.resize((1600, round(h * 1600 / w)), Image.LANCZOS)
         small = im if w <= 800 else im.resize((800, round(h * 800 / w)), Image.LANCZOS)
-        os.makedirs(os.path.join(ROOT, WORKS_IMG), exist_ok=True)
+        os.makedirs(os.path.join(ROOT, folder), exist_ok=True)
         large.save(os.path.join(ROOT, big), "WEBP", quality=86, method=6)
         small.save(os.path.join(ROOT, portfolio.sm_path(big)), "WEBP", quality=82, method=6)
         return {"src": big, "w": large.size[0], "h": large.size[1]}
@@ -74,8 +76,10 @@ def save_video(data, slug, ext):
 def remove_orphans(data):
     """作品の画像・動画の置き場から、どの作品も使っていないファイルを消す"""
     used = portfolio.referenced_images(data)
+    for rel in portfolio.hand_pages(data):
+        used |= inline.referenced(portfolio.read(os.path.join(ROOT, rel)))
     removed = []
-    for d in (WORKS_IMG, VIDEO_DIR):
+    for d in (WORKS_IMG, VIDEO_DIR, SITE_IMG):
         full = os.path.join(ROOT, d)
         if not os.path.isdir(full):
             continue
@@ -88,7 +92,13 @@ def remove_orphans(data):
 
 
 # ===== 保存 =====
-def save_all(works):
+def page_source(rel, data, edits=None):
+    """手書きのページのソースに、目印を付けて直した中身を書き戻したもの"""
+    src = inline.annotate(portfolio.read(os.path.join(ROOT, rel)))
+    return inline.apply(src, edits, portfolio.prefix_of(rel)) if edits else src
+
+
+def save_all(works, pages=None):
     works = [portfolio.clean_work(w) for w in works]
     slugs = [w["slug"] for w in works]
     if any(not s for s in slugs):
@@ -97,11 +107,19 @@ def save_all(works):
         raise RuntimeError("ページの名前（英字）が重なっている作品があります")
     old = portfolio.load()
     data = {"works": works}
+    allowed = set(portfolio.hand_pages(old))
+    written = []
+    for rel, edits in (pages or {}).items():
+        if rel not in allowed:
+            raise RuntimeError(f"{rel} は書き換えられません")
+        if portfolio.write_if_changed(os.path.join(ROOT, rel), page_source(rel, old, edits)):
+            written.append(rel)
     old_pages = {w["slug"] for w in old["works"] if portfolio.is_team_page(w)}
     new_pages = {w["slug"] for w in works if portfolio.is_team_page(w)}
     with open(portfolio.DATA_PATH, "w", encoding="utf-8", newline="\n") as f:
         f.write(portfolio.dump(data))
     _, changed = portfolio.build(data)
+    changed = list(dict.fromkeys(written + changed))
     for slug in old_pages - new_pages:
         p = os.path.join(ROOT, "works", f"{slug}.html")
         if os.path.exists(p):
@@ -251,10 +269,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             w = next((x for x in works if x.get("slug") == m.group(1)), None)
             if not w:
                 return self.send_error(404)
+            if w.get("kind") == "main":
+                rel = f"works/{w['slug']}.html"
+                src = page_source(rel, None, drafts["pages"].get(rel))
+                return self.send_html(portfolio.render_main_page(src, [portfolio.clean_work(x) for x in works]))
             return self.send_html(portfolio.render_work(portfolio.clean_work(w), works, portfolio.version()))
         if url.path == "/__preview-index.html":
             works = drafts["works"] or portfolio.load()["works"]
-            src = portfolio.read(os.path.join(ROOT, "index.html"))
+            src = page_source("index.html", None, drafts["pages"].get("index.html"))
             return self.send_html(portfolio.render_index(src, [portfolio.clean_work(w) for w in works]))
         return super().do_GET()
 
@@ -265,12 +287,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         q = urllib.parse.parse_qs(url.query)
         try:
             if url.path == "/api/preview":
-                drafts["works"] = json.loads(self.body())["works"]
+                body = json.loads(self.body())
+                drafts["works"] = body["works"]
+                drafts["pages"] = body.get("pages") or {}
                 return self.send_json({"ok": True})
             if url.path == "/api/save":
+                body = json.loads(self.body())
                 with lock:
-                    res = save_all(json.loads(self.body())["works"])
+                    res = save_all(body["works"], body.get("pages"))
                 drafts["works"] = None
+                drafts["pages"] = {}
                 return self.send_json({"ok": True, **res, "works": portfolio.load()["works"]})
             if url.path == "/api/upload":
                 slug = re.sub(r"[^a-z0-9-]", "", (q.get("slug") or ["work"])[0]) or "work"
@@ -282,7 +308,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     if ext in VIDEO_EXT:
                         return self.send_json({"ok": True, "video": save_video(data, slug, ext)})
                     if ext in IMAGE_EXT:
-                        return self.send_json({"ok": True, "image": save_image(data, slug, slot)})
+                        folder = SITE_IMG if (q.get("dir") or [""])[0] == "site" else WORKS_IMG
+                        return self.send_json({"ok": True, "image": save_image(data, slug, slot, folder)})
                 return self.send_json({"error": f"{ext or 'この種類'} のファイルは使えません（画像：png / jpg / webp、動画：mp4 / webm）"}, 400)
             if url.path == "/api/git/commit":
                 msg = (json.loads(self.body()).get("message") or "").strip()
@@ -302,6 +329,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if code:
                     return self.send_json({"error": out}, 500)
                 drafts["works"] = None
+                drafts["pages"] = {}
                 return self.send_json({"ok": True, "output": out, "works": portfolio.load()["works"]})
             if url.path == "/api/git/fetch":
                 code, out = git("fetch", timeout=120)

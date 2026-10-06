@@ -53,44 +53,44 @@
 <main>
 
 <section class="work-cover">
-  <p class="door-no">MAIN WORK ─ 就活作品</p>
-  <h1 class="door-title">koaEngine</h1>
-  <p class="work-cover-sub">自作ゲームエンジン ／ 目標：沖縄の海を自作ゲームエンジンで実装</p>
+  <p class="door-no" data-edit="t1">MAIN WORK ─ 就活作品</p>
+  <h1 class="door-title" data-edit="t2">koaEngine</h1>
+  <p class="work-cover-sub" data-edit="t3">自作ゲームエンジン ／ 目標：沖縄の海を自作ゲームエンジンで実装</p>
   <nav data-float class="contents is-wide" aria-label="このページの目次">
-    <p class="contents-title">目次 <span>CONTENTS</span></p>
+    <p class="contents-title" data-edit="t4">目次 <span>CONTENTS</span></p>
     <ol>
-      <li><a href="#overview"><span>01</span>作品概要</a></li>
-      <li><a href="#goal"><span>02</span>目標</a></li>
-      <li><a href="#rendering"><span>03</span>基本レンダリング</a></li>
-      <li><a href="#waves"><span>04</span>波シミュレーション</a></li>
-      <li><a href="#water-color"><span>05</span>水の色</a></li>
-      <li><a href="#optics"><span>06</span>反射・屈折・コースティクス</a></li>
-      <li><a href="#sky"><span>07</span>Sky Atmosphere</a></li>
-      <li><a href="#cloud"><span>08</span>Volumetric Cloud</a></li>
+      <li><a href="#overview" data-edit="t5"><span>01</span>作品概要</a></li>
+      <li><a href="#goal" data-edit="t6"><span>02</span>目標</a></li>
+      <li><a href="#rendering" data-edit="t7"><span>03</span>基本レンダリング</a></li>
+      <li><a href="#waves" data-edit="t8"><span>04</span>波シミュレーション</a></li>
+      <li><a href="#water-color" data-edit="t9"><span>05</span>水の色</a></li>
+      <li><a href="#optics" data-edit="t10"><span>06</span>反射・屈折・コースティクス</a></li>
+      <li><a href="#sky" data-edit="t11"><span>07</span>Sky Atmosphere</a></li>
+      <li><a href="#cloud" data-edit="t12"><span>08</span>Volumetric Cloud</a></li>
     </ol>
   </nav>
 </section>
 
 <article data-float class="page reveal" id="overview">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要</p>
-  <h3 class="band">koaEngine（自作エンジン）</h3>
+  <p class="crumb" data-edit="t13"><span class="crumb-bar">|</span>作品概要</p>
+  <h3 class="band" data-edit="t14">koaEngine（自作エンジン）</h3>
   <div class="overview">
     <dl class="spec">
-      <div><dt>作品内容</dt><dd>ゲームエンジンデモ</dd></div>
-      <div><dt>制作人数</dt><dd>1人</dd></div>
-      <div class="wide"><dt>制作期間</dt><dd>約1年半 <em class="now">// 現在も制作中</em></dd></div>
-      <div class="wide"><dt>SDK</dt><dd>DirectX12</dd></div>
-      <div class="wide"><dt>外部ライブラリ</dt>
-        <dd><ul class="libs"><li>DirectXTex</li><li>ImGui, ImGuizmo</li><li>Assimp</li><li>nlohmann json</li></ul></dd>
+      <div><dt data-edit="t15">作品内容</dt><dd data-edit="t16">ゲームエンジンデモ</dd></div>
+      <div><dt data-edit="t17">制作人数</dt><dd data-edit="t18">1人</dd></div>
+      <div class="wide"><dt data-edit="t19">制作期間</dt><dd data-edit="t20">約1年半 <em class="now">// 現在も制作中</em></dd></div>
+      <div class="wide"><dt data-edit="t21">SDK</dt><dd data-edit="t22">DirectX12</dd></div>
+      <div class="wide"><dt data-edit="t23">外部ライブラリ</dt>
+        <dd><ul class="libs" data-edit-list="l1"><li>DirectXTex</li><li>ImGui, ImGuizmo</li><li>Assimp</li><li>nlohmann json</li></ul></dd>
       </div>
     </dl>
     <div class="overview-media">
       <figure class="shot">
-        <img src="../assets/img/engine/editor.webp" srcset="../assets/img/engine/editor-sm.webp 800w, ../assets/img/engine/editor.webp 1600w" sizes="(min-width: 900px) 560px, 100vw" width="1600" height="900" alt="自作エンジンのエディタ画面" loading="lazy" decoding="async" data-zoom>
-        <figcaption>自作エンジンのエディタ画面（1920×1080 / 60fps）</figcaption>
+        <img src="../assets/img/engine/editor.webp" srcset="../assets/img/engine/editor-sm.webp 800w, ../assets/img/engine/editor.webp 1600w" sizes="(min-width: 900px) 560px, 100vw" width="1600" height="900" alt="自作エンジンのエディタ画面" loading="lazy" decoding="async" data-zoom data-edit-img="i1">
+        <figcaption data-edit="t24">自作エンジンのエディタ画面（1920×1080 / 60fps）</figcaption>
       </figure>
-      <button class="video" type="button" data-yt="gtPeppsGQYw" data-title="プログラム説明動画" aria-label="プログラム説明動画を見る（YouTube）">
-        <img src="../assets/img/engine/cover-sm.webp" width="800" height="450" alt="" loading="lazy" decoding="async">
+      <button class="video" type="button" data-yt="gtPeppsGQYw" data-title="プログラム説明動画" aria-label="プログラム説明動画を見る（YouTube）" data-edit-yt="v1">
+        <img src="../assets/img/engine/cover-sm.webp" width="800" height="450" alt="" loading="lazy" decoding="async" data-edit-img="i2">
         <span class="video-play" aria-hidden="true"></span>
         <span class="video-label"><span class="yt-bar">||</span> Youtube　プログラム説明動画を見る</span>
       </button>
@@ -99,105 +99,105 @@
 </article>
 
 <article data-float class="page reveal" id="goal">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要 <small>/ 目標</small></p>
+  <p class="crumb" data-edit="t25"><span class="crumb-bar">|</span>作品概要 <small>/ 目標</small></p>
   <div class="goal">
-    <p class="goal-line"><span class="goal-tag">目標：</span>沖縄の海を自作ゲームエンジンで実装</p>
-    <p class="goal-why">大好きな故郷、沖縄の海をゲームエンジンで再現したかったから</p>
+    <p class="goal-line" data-edit="t26"><span class="goal-tag">目標：</span>沖縄の海を自作ゲームエンジンで実装</p>
+    <p class="goal-why" data-edit="t27">大好きな故郷、沖縄の海をゲームエンジンで再現したかったから</p>
   </div>
-  <p class="row-label">目指した海（沖縄の写真）</p>
+  <p class="row-label" data-edit="t28">目指した海（沖縄の写真）</p>
   <div class="trio">
-    <img src="../assets/img/engine/okinawa-1-sm.webp" width="800" height="534" alt="沖縄の海の写真（白い砂浜と遠浅の海）" loading="lazy" decoding="async" data-zoom>
-    <img src="../assets/img/engine/okinawa-2-sm.webp" width="800" height="437" alt="沖縄の海の写真（岩場のある浜辺）" loading="lazy" decoding="async" data-zoom>
-    <img src="../assets/img/engine/okinawa-3-sm.webp" width="800" height="533" alt="沖縄の海の写真（青い空と澄んだ浅瀬）" loading="lazy" decoding="async" data-zoom>
+    <img src="../assets/img/engine/okinawa-1-sm.webp" width="800" height="534" alt="沖縄の海の写真（白い砂浜と遠浅の海）" loading="lazy" decoding="async" data-zoom data-edit-img="i3">
+    <img src="../assets/img/engine/okinawa-2-sm.webp" width="800" height="437" alt="沖縄の海の写真（岩場のある浜辺）" loading="lazy" decoding="async" data-zoom data-edit-img="i4">
+    <img src="../assets/img/engine/okinawa-3-sm.webp" width="800" height="533" alt="沖縄の海の写真（青い空と澄んだ浅瀬）" loading="lazy" decoding="async" data-zoom data-edit-img="i5">
   </div>
-  <p class="row-label is-teal">自作エンジンで再現した海</p>
+  <p class="row-label is-teal" data-edit="t29">自作エンジンで再現した海</p>
   <div class="trio">
-    <img src="../assets/img/engine/recreated-1-sm.webp" width="800" height="450" alt="自作エンジンで描いた浅瀬と島" loading="lazy" decoding="async" data-zoom>
-    <img src="../assets/img/engine/recreated-2-sm.webp" width="800" height="450" alt="自作エンジンで描いた沖の島" loading="lazy" decoding="async" data-zoom>
-    <img src="../assets/img/engine/recreated-3-sm.webp" width="800" height="450" alt="自作エンジンで描いた岩場の浅瀬" loading="lazy" decoding="async" data-zoom>
+    <img src="../assets/img/engine/recreated-1-sm.webp" width="800" height="450" alt="自作エンジンで描いた浅瀬と島" loading="lazy" decoding="async" data-zoom data-edit-img="i6">
+    <img src="../assets/img/engine/recreated-2-sm.webp" width="800" height="450" alt="自作エンジンで描いた沖の島" loading="lazy" decoding="async" data-zoom data-edit-img="i7">
+    <img src="../assets/img/engine/recreated-3-sm.webp" width="800" height="450" alt="自作エンジンで描いた岩場の浅瀬" loading="lazy" decoding="async" data-zoom data-edit-img="i8">
   </div>
 </article>
 
 <article data-float class="page reveal" id="rendering">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要 <small>/ 基本レンダリング</small></p>
-  <h3 class="band">基本レンダリング</h3>
+  <p class="crumb" data-edit="t30"><span class="crumb-bar">|</span>作品概要 <small>/ 基本レンダリング</small></p>
+  <h3 class="band" data-edit="t31">基本レンダリング</h3>
   <div class="split">
     <div class="split-text">
-      <h4 class="sub"><span>||</span>物理ベースレンダリング（PBR）</h4>
-      <p>海を再現するため、前提となる物理ベースレンダリングを実装しました。<br>Unreal Engine が公開している文献などを参考にしながら実装しました。</p>
-      <h4 class="sub"><span>||</span>レンダリングフロー</h4>
-      <p>水の実装にてレイトレーシングで “G-Buffer” を使用するので <mark>Deferred Rendering</mark> を実装しました。<br>ですが水は半透明のため <mark>Forward Rendering</mark> も実装し、<mark>Deferred Rendering + Forward Rendering</mark> のハイブリッド構成にしました。</p>
+      <h4 class="sub" data-edit="t32"><span>||</span>物理ベースレンダリング（PBR）</h4>
+      <p data-edit="t33">海を再現するため、前提となる物理ベースレンダリングを実装しました。<br>Unreal Engine が公開している文献などを参考にしながら実装しました。</p>
+      <h4 class="sub" data-edit="t34"><span>||</span>レンダリングフロー</h4>
+      <p data-edit="t35">水の実装にてレイトレーシングで “G-Buffer” を使用するので <mark>Deferred Rendering</mark> を実装しました。<br>ですが水は半透明のため <mark>Forward Rendering</mark> も実装し、<mark>Deferred Rendering + Forward Rendering</mark> のハイブリッド構成にしました。</p>
     </div>
     <figure class="split-media">
-      <img src="../assets/img/engine/recreated-2.webp" srcset="../assets/img/engine/recreated-2-sm.webp 800w, ../assets/img/engine/recreated-2.webp 1600w" sizes="(min-width: 900px) 540px, 100vw" width="1600" height="900" alt="物理ベースレンダリングで描いた沖の島" loading="lazy" decoding="async" data-zoom>
+      <img src="../assets/img/engine/recreated-2.webp" srcset="../assets/img/engine/recreated-2-sm.webp 800w, ../assets/img/engine/recreated-2.webp 1600w" sizes="(min-width: 900px) 540px, 100vw" width="1600" height="900" alt="物理ベースレンダリングで描いた沖の島" loading="lazy" decoding="async" data-zoom data-edit-img="i9">
     </figure>
   </div>
 </article>
 
 <article data-float class="page reveal" id="waves">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要 <small>/ Water Rendering</small></p>
-  <h3 class="band">Gerstner Wave × FFT Ocean ハイブリッド水面</h3>
+  <p class="crumb" data-edit="t36"><span class="crumb-bar">|</span>作品概要 <small>/ Water Rendering</small></p>
+  <h3 class="band" data-edit="t37">Gerstner Wave × FFT Ocean ハイブリッド水面</h3>
   <div class="split is-media-first is-wide-media">
     <figure class="split-media">
-      <img src="../assets/img/engine/fft-ocean.webp" srcset="../assets/img/engine/fft-ocean-sm.webp 800w, ../assets/img/engine/fft-ocean.webp 1600w" sizes="(min-width: 900px) 660px, 100vw" width="1600" height="900" alt="Gerstner Wave と FFT Ocean を組み合わせた水面" loading="lazy" decoding="async" data-zoom>
+      <img src="../assets/img/engine/fft-ocean.webp" srcset="../assets/img/engine/fft-ocean-sm.webp 800w, ../assets/img/engine/fft-ocean.webp 1600w" sizes="(min-width: 900px) 660px, 100vw" width="1600" height="900" alt="Gerstner Wave と FFT Ocean を組み合わせた水面" loading="lazy" decoding="async" data-zoom data-edit-img="i10">
     </figure>
     <div class="split-text">
-      <h4 class="sub"><span>||</span>波シミュレーション</h4>
-      <p>近景向けの <mark>Gerstner Wave</mark> と、大規模海面向けに GPU 上で自作した <mark>FFT Ocean</mark> を統合したハイブリッド構成を実装</p>
+      <h4 class="sub" data-edit="t38"><span>||</span>波シミュレーション</h4>
+      <p data-edit="t39">近景向けの <mark>Gerstner Wave</mark> と、大規模海面向けに GPU 上で自作した <mark>FFT Ocean</mark> を統合したハイブリッド構成を実装</p>
     </div>
   </div>
-  <p class="more"><span class="more-key">詳しくは → 説明資料 p7〜p8</span>なぜ FFT を選んだのか／既存の枠組みに自分で足した 3 点</p>
+  <p class="more" data-edit="t40"><span class="more-key">詳しくは → 説明資料 p7〜p8</span>なぜ FFT を選んだのか／既存の枠組みに自分で足した 3 点</p>
 </article>
 
 <article data-float class="page reveal" id="water-color">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要 <small>/ Water Rendering</small></p>
-  <h3 class="band">物理ベース水面</h3>
+  <p class="crumb" data-edit="t41"><span class="crumb-bar">|</span>作品概要 <small>/ Water Rendering</small></p>
+  <h3 class="band" data-edit="t42">物理ベース水面</h3>
   <div class="stagger">
     <figure>
-      <img src="../assets/img/engine/watercolor-day-sm.webp" width="800" height="450" alt="昼の水面" loading="lazy" decoding="async" data-zoom>
-      <figcaption class="t-day">昼</figcaption>
+      <img src="../assets/img/engine/watercolor-day-sm.webp" width="800" height="450" alt="昼の水面" loading="lazy" decoding="async" data-zoom data-edit-img="i11">
+      <figcaption class="t-day" data-edit="t43">昼</figcaption>
     </figure>
     <figure>
-      <img src="../assets/img/engine/watercolor-evening-sm.webp" width="800" height="450" alt="夕方の水面" loading="lazy" decoding="async" data-zoom>
-      <figcaption class="t-eve">夕方</figcaption>
+      <img src="../assets/img/engine/watercolor-evening-sm.webp" width="800" height="450" alt="夕方の水面" loading="lazy" decoding="async" data-zoom data-edit-img="i12">
+      <figcaption class="t-eve" data-edit="t44">夕方</figcaption>
     </figure>
     <figure>
-      <img src="../assets/img/engine/watercolor-night-sm.webp" width="800" height="450" alt="夜の水面" loading="lazy" decoding="async" data-zoom>
-      <figcaption class="t-night">夜</figcaption>
+      <img src="../assets/img/engine/watercolor-night-sm.webp" width="800" height="450" alt="夜の水面" loading="lazy" decoding="async" data-zoom data-edit-img="i13">
+      <figcaption class="t-night" data-edit="t45">夜</figcaption>
     </figure>
   </div>
-  <h4 class="sub"><span>||</span>水の色</h4>
-  <p>浅瀬のエメラルドから深瀬の青への変化を、色指定ではなく <mark>水の吸収係数・散乱係数</mark> から計算で導出</p>
-  <p class="more"><span class="more-key">詳しくは → 説明資料 p9</span>色を手で塗るのをやめて、水の吸収・散乱から計算するまでの話</p>
+  <h4 class="sub" data-edit="t46"><span>||</span>水の色</h4>
+  <p data-edit="t47">浅瀬のエメラルドから深瀬の青への変化を、色指定ではなく <mark>水の吸収係数・散乱係数</mark> から計算で導出</p>
+  <p class="more" data-edit="t48"><span class="more-key">詳しくは → 説明資料 p9</span>色を手で塗るのをやめて、水の吸収・散乱から計算するまでの話</p>
 </article>
 
 <article data-float class="page reveal" id="optics">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要 <small>/ Water Rendering</small></p>
-  <h3 class="band">水面を光学境界面として扱う</h3>
+  <p class="crumb" data-edit="t49"><span class="crumb-bar">|</span>作品概要 <small>/ Water Rendering</small></p>
+  <h3 class="band" data-edit="t50">水面を光学境界面として扱う</h3>
   <div class="split is-media-first">
     <figure class="split-media">
-      <img src="../assets/img/engine/recreated-3.webp" srcset="../assets/img/engine/recreated-3-sm.webp 800w, ../assets/img/engine/recreated-3.webp 1600w" sizes="(min-width: 900px) 560px, 100vw" width="1600" height="900" alt="島が映り込み、海底が透けて見える浅瀬" loading="lazy" decoding="async" data-zoom>
+      <img src="../assets/img/engine/recreated-3.webp" srcset="../assets/img/engine/recreated-3-sm.webp 800w, ../assets/img/engine/recreated-3.webp 1600w" sizes="(min-width: 900px) 560px, 100vw" width="1600" height="900" alt="島が映り込み、海底が透けて見える浅瀬" loading="lazy" decoding="async" data-zoom data-edit-img="i14">
     </figure>
     <div class="split-text">
-      <h4 class="sub"><span>||</span>反射・屈折・コースティクス</h4>
-      <ul class="points">
+      <h4 class="sub" data-edit="t51"><span>||</span>反射・屈折・コースティクス</h4>
+      <ul class="points" data-edit-list="l2">
         <li><b>反射</b>鏡像カメラによる Planar Reflection（空・雲がそのまま映る）</li>
         <li><b>屈折</b>DXR で屈折方向にレイを飛ばし、画面外を含む水中背景を取得</li>
         <li><b>コースティクス</b>水面の凸凹による集光を計算し、海底へ投影</li>
       </ul>
     </div>
   </div>
-  <p class="more"><span class="more-key">詳しくは → 説明資料 p10〜p11・補足A（p22）</span>水面際が破綻した原因と、レイで情報を足した話</p>
+  <p class="more" data-edit="t52"><span class="more-key">詳しくは → 説明資料 p10〜p11・補足A（p22）</span>水面際が破綻した原因と、レイで情報を足した話</p>
 </article>
 
 <article data-float class="page reveal" id="sky">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要 <small>/ Sky Atmosphere</small></p>
-  <h3 class="band">空の色を、大気の物理から計算する</h3>
+  <p class="crumb" data-edit="t53"><span class="crumb-bar">|</span>作品概要 <small>/ Sky Atmosphere</small></p>
+  <h3 class="band" data-edit="t54">空の色を、大気の物理から計算する</h3>
   <div class="timeslide" style="--t: 0">
     <div class="timeslide-view">
-      <img src="../assets/img/engine/sky-day.webp" width="1600" height="900" alt="昼の空" loading="lazy" decoding="async">
-      <img src="../assets/img/engine/sky-dusk.webp" width="1600" height="900" alt="夕暮れの空" loading="lazy" decoding="async">
-      <img src="../assets/img/engine/sky-night.webp" width="1600" height="900" alt="夜の空（月と星）" loading="lazy" decoding="async">
+      <img src="../assets/img/engine/sky-day.webp" width="1600" height="900" alt="昼の空" loading="lazy" decoding="async" data-edit-img="i15">
+      <img src="../assets/img/engine/sky-dusk.webp" width="1600" height="900" alt="夕暮れの空" loading="lazy" decoding="async" data-edit-img="i16">
+      <img src="../assets/img/engine/sky-night.webp" width="1600" height="900" alt="夜の空（月と星）" loading="lazy" decoding="async" data-edit-img="i17">
     </div>
     <div class="timeslide-ui">
       <input type="range" min="0" max="2" step="0.01" value="0" aria-label="時刻">
@@ -208,28 +208,28 @@
       </div>
     </div>
   </div>
-  <h4 class="sub"><span>||</span>大気散乱（Sky Atmosphere）</h4>
-  <p>空の色は、<mark>レイリー／ミー散乱とオゾン吸収の積分</mark> から生成。時刻を動かすだけで昼→夕→夜が変わります</p>
-  <p class="more is-strong"><span class="more-key">空・雲・水面・環境光を、同じ大気散乱から供給</span>時間帯ごとのアセットや個別調整は要りません</p>
+  <h4 class="sub" data-edit="t55"><span>||</span>大気散乱（Sky Atmosphere）</h4>
+  <p data-edit="t56">空の色は、<mark>レイリー／ミー散乱とオゾン吸収の積分</mark> から生成。時刻を動かすだけで昼→夕→夜が変わります</p>
+  <p class="more is-strong" data-edit="t57"><span class="more-key">空・雲・水面・環境光を、同じ大気散乱から供給</span>時間帯ごとのアセットや個別調整は要りません</p>
 </article>
 
 <article data-float class="page reveal" id="cloud">
-  <p class="crumb"><span class="crumb-bar">|</span>作品概要 <small>/ Volumetric Cloud</small></p>
-  <h3 class="band">雲は、密度を積分して描いている</h3>
+  <p class="crumb" data-edit="t58"><span class="crumb-bar">|</span>作品概要 <small>/ Volumetric Cloud</small></p>
+  <h3 class="band" data-edit="t59">雲は、密度を積分して描いている</h3>
   <div class="split">
     <div class="split-text">
-      <h4 class="sub"><span>||</span>ボリュメトリック雲</h4>
-      <ul class="points">
+      <h4 class="sub" data-edit="t60"><span>||</span>ボリュメトリック雲</h4>
+      <ul class="points" data-edit-list="l3">
         <li><b>形状</b>Perlin-Worley 128³ など 3 種のノイズを Compute Shader で手続き生成</li>
         <li><b>光</b>球殻の雲層をレイマーチし、位相関数と多重散乱近似で内部の光を積分</li>
         <li><b>接続</b>太陽と月の 2 光源に対応。空と雲のキューブマップが水面とモデルへ映り込む</li>
       </ul>
     </div>
     <figure class="split-media">
-      <img src="../assets/img/engine/cloud.webp" srcset="../assets/img/engine/cloud-sm.webp 800w, ../assets/img/engine/cloud.webp 1600w" sizes="(min-width: 900px) 560px, 100vw" width="1600" height="900" alt="ボリュメトリック雲が水面に映り込む様子" loading="lazy" decoding="async" data-zoom>
+      <img src="../assets/img/engine/cloud.webp" srcset="../assets/img/engine/cloud-sm.webp 800w, ../assets/img/engine/cloud.webp 1600w" sizes="(min-width: 900px) 560px, 100vw" width="1600" height="900" alt="ボリュメトリック雲が水面に映り込む様子" loading="lazy" decoding="async" data-zoom data-edit-img="i18">
     </figure>
   </div>
-  <p class="more is-strong"><span class="more-key">雲も空と同じ光源で積分し、水面とモデルに映り込む</span>ノイズもアセット無しで、全部エンジン内で生成</p>
+  <p class="more is-strong" data-edit="t61"><span class="more-key">雲も空と同じ光源で積分し、水面とモデルに映り込む</span>ノイズもアセット無しで、全部エンジン内で生成</p>
 </article>
 
 <nav class="pager" aria-label="ページの移動">

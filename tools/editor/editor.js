@@ -6,6 +6,8 @@ const GRADE_KEYS = ['y1', 'y2', 'y3', 'y4'];
 let GRADES = { y1: '1年生', y2: '2年生', y3: '3年生', y4: '4年生' };
 
 const state = {
+  mode: 'work',
+  pages: {},
   works: [],
   saved: '',
   sel: 0,
@@ -66,8 +68,26 @@ function strip(works) {
   return works.map(({ _id, ...w }) => w);
 }
 
+// 手書きのページ（トップ・就活作品）の直し。{ 'index.html': { html: {}, imgs: {}, yts: {} } }
+function pagesToSend() {
+  const out = {};
+  for (const [rel, e] of Object.entries(state.pages)) {
+    if (editCount(e)) out[rel] = e;
+  }
+  return out;
+}
+
+function editCount(e) {
+  return e ? Object.keys(e.html || {}).length + Object.keys(e.imgs || {}).length + Object.keys(e.yts || {}).length : 0;
+}
+
+function pageEdits(rel) {
+  if (!state.pages[rel]) state.pages[rel] = { html: {}, imgs: {}, yts: {} };
+  return state.pages[rel];
+}
+
 function serialize() {
-  return JSON.stringify(strip(state.works));
+  return JSON.stringify({ works: strip(state.works), pages: pagesToSend() });
 }
 
 function isMain(w) {
@@ -127,17 +147,29 @@ function changed({ list = true } = {}) {
 // ===== 左：作品の一覧 =====
 let dragFrom = -1;
 
+function renderPages() {
+  const n = editCount(state.pages['index.html']);
+  const li = document.createElement('li');
+  li.className = `item${state.mode === 'home' ? ' is-active' : ''}`;
+  li.innerHTML = `<span class="item-thumb" style="background-image:url('/assets/img/engine/cover-sm.webp')"></span>
+    <span><span class="item-title">トップページ</span>
+    <span class="item-meta"><span class="dot is-main"></span>表紙・就活作品・自己紹介${n ? '<span class="item-dirty">・未保存</span>' : ''}</span></span>`;
+  li.addEventListener('click', selectHome);
+  $('[data-pages]').replaceChildren(li);
+}
+
 function renderList() {
+  renderPages();
   const ul = $('[data-list]');
   ul.replaceChildren(...state.works.map((w, i) => {
     const li = document.createElement('li');
-    li.className = `item${i === state.sel ? ' is-active' : ''}`;
+    li.className = `item${state.mode === 'work' && i === state.sel ? ' is-active' : ''}`;
     li.draggable = true;
     const img = (w.thumb && w.thumb.src) ? w.thumb : w.main;
     const kind = isMain(w) ? '<span class="dot is-main"></span>就活作品' : `<span class="dot${isWip(w) ? ' is-wip' : ''}"></span>${esc(GRADES[w.cat] || '')}${isWip(w) ? '・準備中' : ''}`;
     li.innerHTML = `<span class="item-thumb" style="background-image:url('${esc(imgUrl(img))}')"></span>
       <span><span class="item-title">${esc(titleOf(w))}</span>
-      <span class="item-meta">${kind}${workDirty(w) ? '<span class="item-dirty">・未保存</span>' : ''}</span></span>`;
+      <span class="item-meta">${kind}${workDirty(w) || (isMain(w) && editCount(state.pages[`works/${w.slug}.html`])) ? '<span class="item-dirty">・未保存</span>' : ''}</span></span>`;
     li.addEventListener('click', () => select(i));
     li.addEventListener('dragstart', (e) => {
       dragFrom = i;
@@ -173,11 +205,34 @@ function renderList() {
   }));
 }
 
+function setPvPage(page) {
+  state.pvPage = page;
+  $$('[data-pv-page]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.pvPage === page)));
+}
+
+// 作品を選ぶと、プレビューもその作品のページにする
 function select(i) {
+  state.mode = 'work';
   state.sel = Math.max(0, Math.min(state.works.length - 1, i));
+  setPvPage('work');
+  $('[data-pv-pages]').hidden = false;
   renderList();
   renderForm();
   refreshPreview();
+}
+
+function selectHome() {
+  state.mode = 'home';
+  setPvPage('index');
+  $('[data-pv-pages]').hidden = true;
+  renderList();
+  renderForm();
+  refreshPreview();
+}
+
+function selectSlug(slug) {
+  const i = state.works.findIndex((w) => w.slug === slug);
+  if (i >= 0) select(i);
 }
 
 $('[data-add]').addEventListener('click', () => {
@@ -190,6 +245,9 @@ $('[data-add]').addEventListener('click', () => {
   const mainIdx = state.works.findIndex(isMain);
   state.works.splice(mainIdx + 1, 0, w);
   state.sel = mainIdx + 1;
+  state.mode = 'work';
+  setPvPage('work');
+  $('[data-pv-pages]').hidden = false;
   changed();
   renderForm();
   refreshPreview();
@@ -217,9 +275,42 @@ function dropBox(slot, img, { label = '', small = false } = {}) {
   </div>`;
 }
 
+function inlineGuide(rel, title) {
+  const n = editCount(state.pages[rel]);
+  return `<div class="card"><h3>${title}</h3>
+    <p class="guide">右のプレビューを<b>直接クリックして書き換えます</b>。</p>
+    <ul class="guide-list">
+      <li><b>文字</b>：クリックしてそのまま打つ。Enter で改行</li>
+      <li><b>タグや箇条書き</b>：1 つ選ぶと上に［＋ 増やす・↑↓ 並べ替え・× 消す］が出る（Enter でも 1 つ増える）</li>
+      <li><b>画像</b>：クリックで選ぶか、ファイルをドロップして差し替え</li>
+      <li><b>動画のボタン</b>：クリックで YouTube の URL を変える</li>
+    </ul>
+    <div class="guide-count"><span>このページで直した所：<b data-edit-count="${esc(rel)}">${n}</b> か所</span>
+      <button class="btn is-ghost is-small" type="button" data-undo-page="${esc(rel)}"${n ? '' : ' disabled'}>直しを全部取り消す</button></div>
+  </div>`;
+}
+
+function bindGuide(box) {
+  $$('[data-undo-page]', box).forEach((b) => b.addEventListener('click', () => {
+    delete state.pages[b.dataset.undoPage];
+    toast('このページの直しを取り消しました');
+    changed();
+    renderForm();
+  }));
+}
+
 function renderForm() {
   const w = cur();
   const box = $('[data-form]');
+  if (state.mode === 'home') {
+    box.innerHTML = `<h2 class="form-title">トップページ <small>index.html</small></h2>
+      ${inlineGuide('index.html', 'トップページの中身')}
+      <div class="card"><h3>作品一覧のカード</h3>
+        <p class="guide">一覧のカードは各作品のデータから作ります。プレビューのカードを押すと、その作品の編集に移ります。並び順は左の作品の一覧をドラッグして変えます。</p>
+      </div>`;
+    bindGuide(box);
+    return;
+  }
   if (!w) {
     box.innerHTML = '';
     return;
@@ -227,8 +318,8 @@ function renderForm() {
   if (isMain(w)) {
     box.innerHTML = `
       <h2 class="form-title">${esc(w.title)} <small>works/${esc(w.slug)}.html</small></h2>
-      <p class="notice">就活作品のページは専用の作りなので、ここではトップの作品一覧に出るカードだけを編集できます。</p>
-      <div class="card"><h3>一覧のカード</h3>
+      ${inlineGuide(`works/${w.slug}.html`, '作品ページの中身')}
+      <div class="card"><h3>トップの作品一覧のカード</h3>
         ${field('タイトル', 'title')}
         ${field('上の小さい行', 'meta', { placeholder: '就活作品 ・ 1人 ・ 約1年半' })}
         <label class="field"><span>一言紹介 <small class="count" data-count></small></span><textarea rows="3" data-k="summary">${esc(w.summary)}</textarea></label>
@@ -236,6 +327,7 @@ function renderForm() {
         ${dropBox('thumb', w.thumb)}
       </div>`;
     bindForm(box);
+    bindGuide(box);
     return;
   }
   const yt = w.youtube ? `<div class="yt-preview"><img src="https://i.ytimg.com/vi/${esc(w.youtube)}/mqdefault.jpg" alt=""><span>動画 ID <b>${esc(w.youtube)}</b><br><a href="https://www.youtube.com/watch?v=${esc(w.youtube)}" target="_blank" rel="noopener">YouTube で確かめる ↗</a></span></div>` : '';
@@ -672,15 +764,18 @@ let pvScroll = { key: '', y: 0 };
 
 function previewUrl() {
   const w = cur();
-  if (state.pvPage === 'index') return '/__preview-index.html?edit';
+  if (state.mode === 'home' || state.pvPage === 'index') return '/__preview-index.html?edit';
   if (!w) return 'about:blank';
-  if (isMain(w)) return `/works/${w.slug}.html?edit`;
   return `/works/__preview-${w.slug}.html?edit`;
+}
+
+async function postDraft() {
+  await postJson('/api/preview', { works: strip(state.works), pages: pagesToSend() });
 }
 
 async function refreshPreview() {
   try {
-    await postJson('/api/preview', { works: strip(state.works) });
+    await postDraft();
   } catch (e) {
     toast(`プレビューを作れませんでした：${e.message}`, 'error');
     return;
@@ -699,8 +794,10 @@ async function refreshPreview() {
 frame.addEventListener('load', () => {
   try {
     const win = frame.contentWindow;
+    const rel = inlineTarget(win.location.pathname);
+    if (rel) enableInline(win, rel);
     if (win.location.pathname === pvScroll.key) win.scrollTo({ top: pvScroll.y, behavior: 'instant' });
-    else if (state.pvPage === 'index') {
+    else if (state.mode === 'work' && state.pvPage === 'index') {
       const target = win.document.getElementById('works');
       if (target) win.scrollTo({ top: target.getBoundingClientRect().top + win.scrollY - 70, behavior: 'instant' });
     }
@@ -742,6 +839,308 @@ $$('[data-pv-size]').forEach((b) => b.addEventListener('click', () => {
 }));
 $('[data-pv-reload]').addEventListener('click', refreshPreview);
 
+// ===== プレビューを直接書き換える（トップ・就活作品のページ） =====
+const INLINE_CSS = `
+[data-edit], [data-edit-list] > * { outline: 1.5px dashed transparent; outline-offset: 3px; border-radius: 4px; cursor: text; transition: outline-color .15s, background-color .15s; }
+[data-edit]:hover, [data-edit-list] > *:hover { outline-color: rgba(10, 147, 166, .75); background-color: rgba(255, 255, 255, .16); }
+[data-edit]:focus, [data-edit-list] > *:focus { outline: 2px solid #0a93a6; background-color: rgba(255, 255, 255, .3); }
+[data-ed-changed]:not(:focus), [data-ed-changed] > *:not(:focus) { outline: 1.5px solid rgba(255, 176, 60, .9); outline-offset: 3px; }
+[data-edit-img] { cursor: pointer; transition: filter .15s, outline-color .15s; outline: 3px solid transparent; outline-offset: -3px; }
+[data-edit-img]:hover { outline-color: #0a93a6; filter: brightness(1.08); }
+[data-edit-img].ed-busy { filter: grayscale(1) brightness(.7); }
+[data-edit-yt]:hover { outline: 3px solid #f38a70; outline-offset: 2px; }
+.ed-tools { position: fixed; z-index: 99; display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: #0b2533; box-shadow: 0 6px 16px rgba(0,0,0,.3); font: 700 12px/1 "M PLUS Rounded 1c", sans-serif; }
+.ed-tools[hidden], .ed-tip[hidden] { display: none; }
+.ed-tools button { padding: 5px 10px; border: 0; border-radius: 999px; background: transparent; color: #fff; cursor: pointer; font: inherit; }
+.ed-tools button:hover { background: rgba(255,255,255,.15); }
+.ed-tip { position: fixed; z-index: 99; padding: 4px 10px; border-radius: 999px; background: rgba(11, 37, 51, .9); color: #fff; font: 700 11.5px/1.4 "M PLUS Rounded 1c", sans-serif; pointer-events: none; }
+`;
+
+function inlineTarget(path) {
+  if (path === '/__preview-index.html') return 'index.html';
+  const m = path.match(/^\/works\/__preview-([a-z0-9-]+)\.html$/);
+  const w = m && state.works.find((x) => x.slug === m[1]);
+  return w && isMain(w) ? `works/${w.slug}.html` : '';
+}
+
+// 目印の要素の中身（エディタが付けた属性を外したもの）
+function cleanInner(el) {
+  const c = el.cloneNode(true);
+  [c, ...c.querySelectorAll('*')].forEach((n) => {
+    n.removeAttribute('contenteditable');
+    n.removeAttribute('spellcheck');
+    n.removeAttribute('data-ed-changed');
+    n.classList.remove('is-visible', 'is-settled', 'is-emerging');
+    if (n.getAttribute('class') === '') n.removeAttribute('class');
+  });
+  return c.innerHTML;
+}
+
+// 並びの中の空白（改行と字下げ）をそろえ直す
+function tidyList(list) {
+  const ws = [...list.childNodes].filter((n) => n.nodeType === Node.TEXT_NODE);
+  const indent = ws.find((n) => /\n/.test(n.textContent))?.textContent || '';
+  const tail = (ws.length && /\n/.test(ws[ws.length - 1].textContent)) ? ws[ws.length - 1].textContent : '';
+  ws.forEach((n) => { if (!n.textContent.trim()) n.remove(); });
+  if (!indent) return;
+  [...list.children].forEach((item) => list.insertBefore(list.ownerDocument.createTextNode(indent), item));
+  list.appendChild(list.ownerDocument.createTextNode(tail));
+}
+
+function enableInline(win, rel) {
+  const doc = win.document;
+  const edits = pageEdits(rel);
+  const style = doc.createElement('style');
+  style.textContent = INLINE_CSS;
+  doc.head.appendChild(style);
+  const tools = doc.createElement('div');
+  tools.className = 'ed-tools';
+  tools.hidden = true;
+  tools.innerHTML = '<button type="button" data-a="dup">＋ 増やす</button><button type="button" data-a="up">↑</button><button type="button" data-a="down">↓</button><button type="button" data-a="del">× 消す</button>';
+  doc.body.appendChild(tools);
+  const tip = doc.createElement('div');
+  tip.className = 'ed-tip';
+  tip.hidden = true;
+  doc.body.appendChild(tip);
+
+  for (const key of Object.keys(edits.html)) doc.querySelector(`[data-edit="${key}"], [data-edit-list="${key}"]`)?.setAttribute('data-ed-changed', '');
+  for (const key of [...Object.keys(edits.imgs), ...Object.keys(edits.yts)]) doc.querySelector(`[data-edit-img="${key}"], [data-edit-yt="${key}"]`)?.setAttribute('data-ed-changed', '');
+
+  const editable = (el) => {
+    el.contentEditable = 'true';
+    el.spellcheck = false;
+  };
+  doc.querySelectorAll('[data-edit]').forEach(editable);
+  doc.querySelectorAll('[data-edit-list] > *').forEach(editable);
+
+  const hostOf = (n) => (n && n.nodeType === Node.TEXT_NODE ? n.parentElement : n)?.closest?.('[data-edit], [data-edit-list]') || null;
+  const itemOf = (n) => {
+    const host = hostOf(n);
+    if (!host || !host.dataset.editList) return null;
+    return [...host.children].find((c) => c.contains(n)) || null;
+  };
+  const record = (host) => {
+    if (!host) return;
+    const key = host.dataset.edit || host.dataset.editList;
+    edits.html[key] = cleanInner(host);
+    host.setAttribute('data-ed-changed', '');
+    inlineChanged(rel);
+  };
+
+  doc.addEventListener('input', (e) => record(hostOf(e.target)));
+  doc.addEventListener('paste', (e) => {
+    if (!hostOf(e.target)) return;
+    e.preventDefault();
+    doc.execCommand('insertText', false, (e.clipboardData.getData('text/plain') || '').replace(/\s*\n\s*/g, ' '));
+  });
+
+  // タグや箇条書きを 1 つずつ増やす・並べ替える・消す
+  let current = null;
+  const placeTools = () => {
+    if (!current || !current.isConnected) {
+      tools.hidden = true;
+      return;
+    }
+    const r = current.getBoundingClientRect();
+    tools.hidden = false;
+    tools.style.left = `${Math.max(4, r.left)}px`;
+    tools.style.top = `${Math.max(4, r.top - 36)}px`;
+  };
+  const listAction = (a) => {
+    const item = current;
+    if (!item) return;
+    const list = item.parentElement;
+    if (a === 'dup') {
+      const copy = item.cloneNode(true);
+      copy.removeAttribute('data-ed-changed');
+      item.after(copy);
+      editable(copy);
+      current = copy;
+      copy.focus();
+      doc.getSelection().selectAllChildren(copy);
+    } else if (a === 'up' && item.previousElementSibling) {
+      list.insertBefore(item, item.previousElementSibling);
+      item.focus();
+    } else if (a === 'down' && item.nextElementSibling) {
+      item.nextElementSibling.after(item);
+      item.focus();
+    } else if (a === 'del') {
+      if (list.children.length <= 1) {
+        toast('最後の 1 つは消せません');
+        return;
+      }
+      current = item.nextElementSibling || item.previousElementSibling;
+      item.remove();
+      current.focus();
+    }
+    tidyList(list);
+    record(list);
+    placeTools();
+  };
+  tools.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const b = e.target.closest('[data-a]');
+    if (b) listAction(b.dataset.a);
+  });
+  doc.addEventListener('focusin', (e) => {
+    current = itemOf(e.target);
+    placeTools();
+  });
+  doc.addEventListener('focusout', () => setTimeout(() => {
+    if (!itemOf(doc.activeElement)) {
+      current = null;
+      placeTools();
+    }
+  }, 0));
+  win.addEventListener('scroll', placeTools, { passive: true });
+
+  doc.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || e.isComposing || !hostOf(e.target)) return;
+    e.preventDefault();
+    if (itemOf(e.target)) listAction('dup');
+    else doc.execCommand('insertLineBreak');
+  });
+
+  // 画像・動画・作品カード・リンク
+  win.addEventListener('click', (e) => {
+    const t = e.target;
+    if (t.closest('.ed-tools')) return;
+    const img = t.closest('[data-edit-img]');
+    if (img) {
+      e.preventDefault();
+      e.stopPropagation();
+      pickFile('image/*', false, (files) => replaceInlineImage(img, files[0], rel));
+      return;
+    }
+    const yt = t.closest('[data-edit-yt]');
+    if (yt) {
+      e.preventDefault();
+      e.stopPropagation();
+      askYoutube(yt, rel);
+      return;
+    }
+    const card = t.closest('.wcard[data-slug]');
+    if (card) {
+      e.preventDefault();
+      e.stopPropagation();
+      selectSlug(card.dataset.slug);
+      return;
+    }
+    if (hostOf(t)) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    const a = t.closest('a[href]');
+    if (a && new URL(a.href, win.location.href).pathname !== win.location.pathname) {
+      e.preventDefault();
+      e.stopPropagation();
+      toast('プレビューの中では別のページへ移りません（左から選んでください）');
+    }
+  }, true);
+
+  doc.addEventListener('dragover', (e) => e.preventDefault());
+  doc.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const img = e.target.closest && e.target.closest('[data-edit-img]');
+    const file = [...(e.dataTransfer?.files || [])].find((f) => f.type.startsWith('image/'));
+    if (img && file) replaceInlineImage(img, file, rel);
+  });
+
+  const tipFor = (t) => {
+    if (!t.closest) return '';
+    if (t.closest('[data-edit-img]')) return 'クリックで画像を差し替え';
+    if (t.closest('[data-edit-yt]')) return 'クリックで YouTube の動画を変える';
+    if (t.closest('.wcard[data-slug]')) return 'クリックでこの作品の編集へ';
+    return '';
+  };
+  doc.addEventListener('mousemove', (e) => {
+    const text = tipFor(e.target);
+    tip.hidden = !text;
+    if (!text) return;
+    tip.textContent = text;
+    tip.style.left = `${e.clientX + 14}px`;
+    tip.style.top = `${e.clientY + 16}px`;
+  });
+}
+
+let draftTimer = 0;
+
+function inlineChanged(rel) {
+  updateState();
+  renderList();
+  const c = $(`[data-edit-count="${rel}"]`);
+  if (c) {
+    c.textContent = String(editCount(state.pages[rel]));
+    $(`[data-undo-page="${rel}"]`).disabled = false;
+  }
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => postDraft().catch(() => {}), 500);
+}
+
+async function replaceInlineImage(img, file, rel) {
+  const key = img.dataset.editImg;
+  img.classList.add('ed-busy');
+  try {
+    const res = await api(`/api/upload?dir=site&slug=${rel === 'index.html' ? 'top' : 'main'}&slot=${key}`, {
+      method: 'POST',
+      headers: { 'X-Filename': encodeURIComponent(file.name || 'image.png') },
+      body: file,
+    });
+    if (!res.image) throw new Error('画像ファイルを選んでください');
+    const im = res.image;
+    const prefix = rel.includes('/') ? '../' : '';
+    const small = (img.getAttribute('src') || '').endsWith('-sm.webp');
+    const sw = im.w <= 800 ? im.w : 800;
+    const sh = im.w <= 800 ? im.h : Math.round(im.h * 800 / im.w);
+    if (img.hasAttribute('srcset')) img.setAttribute('srcset', `${prefix}${smPath(im.src)} 800w, ${prefix}${im.src} 1600w`);
+    img.setAttribute('src', prefix + (small ? smPath(im.src) : im.src));
+    img.setAttribute('width', String(small ? sw : im.w));
+    img.setAttribute('height', String(small ? sh : im.h));
+    img.setAttribute('data-ed-changed', '');
+    pageEdits(rel).imgs[key] = im;
+    inlineChanged(rel);
+    toast('画像を差し替えました', 'ok');
+  } catch (e) {
+    toast(e.message, 'error');
+  } finally {
+    img.classList.remove('ed-busy');
+  }
+}
+
+function askYoutube(btn, rel) {
+  const box = $('[data-ask]');
+  const input = $('[data-ask-input]', box);
+  const hint = $('[data-ask-hint]', box);
+  input.value = btn.dataset.yt ? `https://youtu.be/${btn.dataset.yt}` : '';
+  hint.textContent = btn.dataset.title ? `「${btn.dataset.title}」のボタン` : '';
+  hint.classList.remove('is-bad');
+  box.hidden = false;
+  input.focus();
+  input.select();
+  const close = () => {
+    box.hidden = true;
+    box.onsubmit = null;
+  };
+  $('[data-ask-cancel]', box).onclick = close;
+  box.onsubmit = (e) => {
+    e.preventDefault();
+    const id = youtubeId(input.value);
+    if (!id) {
+      hint.textContent = 'YouTube の URL として読めませんでした';
+      hint.classList.add('is-bad');
+      return;
+    }
+    btn.dataset.yt = id;
+    btn.setAttribute('data-ed-changed', '');
+    pageEdits(rel).yts[btn.dataset.editYt] = id;
+    inlineChanged(rel);
+    close();
+    toast('動画を変えました', 'ok');
+  };
+}
+
 // ===== 保存 =====
 async function save() {
   if (!dirty()) return true;
@@ -749,7 +1148,7 @@ async function save() {
   btn.disabled = true;
   try {
     const selSlug = cur() && cur().slug;
-    const res = await postJson('/api/save', { works: strip(state.works) });
+    const res = await postJson('/api/save', { works: strip(state.works), pages: pagesToSend() });
     load(res.works, selSlug);
     const n = res.changed.length;
     toast(n ? `保存しました（${n} ファイルを作り直し）` : '保存しました', 'ok');
@@ -778,9 +1177,10 @@ window.addEventListener('beforeunload', (e) => {
 
 function load(works, selSlug) {
   state.works = works.map((w) => ({ ...w, _id: nextId++ }));
+  state.pages = {};
   remember();
   const i = state.works.findIndex((w) => w.slug === selSlug);
-  state.sel = i >= 0 ? i : Math.min(state.sel, state.works.length - 1);
+  state.sel = i >= 0 ? i : Math.max(0, Math.min(state.sel, state.works.length - 1));
   updateState();
   renderList();
   renderForm();
