@@ -112,8 +112,10 @@ def save_all(works):
 
 
 # ===== git =====
-def git(*args, timeout=120):
+def git(*args, timeout=120, stdout_only=False):
     r = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
+    if stdout_only and r.returncode == 0:
+        return 0, r.stdout.rstrip()
     return r.returncode, (r.stdout + r.stderr).strip()
 
 
@@ -121,7 +123,7 @@ STATUS_LABEL = {"M": "変更", "A": "追加", "D": "削除", "R": "名前変更"
 
 
 def git_status():
-    code, out = git("status", "--porcelain=v1", "-b", "-uall")
+    code, out = git("-c", "core.quotepath=false", "status", "--porcelain=v1", "-b", "-uall", stdout_only=True)
     if code:
         raise RuntimeError(out)
     lines = out.splitlines()
@@ -135,7 +137,7 @@ def git_status():
         path = ln[3:].strip().strip('"')
         key = "?" if code2 == "??" else (code2.strip() or "M")[0]
         files.append({"path": path, "label": STATUS_LABEL.get(key, "変更")})
-    _, log = git("log", "-6", "--pretty=format:%h\t%ad\t%s", "--date=format:%m/%d %H:%M")
+    _, log = git("log", "-6", "--pretty=format:%h\t%ad\t%s", "--date=format:%m/%d %H:%M", stdout_only=True)
     commits = [dict(zip(("hash", "date", "subject"), ln.split("\t", 2))) for ln in log.splitlines() if ln]
     return {"branch": branch, "ahead": ahead, "behind": behind, "files": files, "commits": commits}
 
