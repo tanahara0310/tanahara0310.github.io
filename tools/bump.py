@@ -11,7 +11,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VERSION = time.strftime("%Y%m%d%H%M")
 PATTERN = re.compile(r"((?:style\.css|main\.js|ocean\.js))(\?v=[0-9]+)?(?=['\"])")
 
-files = [os.path.join(ROOT, "index.html"), os.path.join(ROOT, "js", "main.js"), os.path.join(ROOT, "tools", "work-template.html")]
+files = [os.path.join(ROOT, "index.html"), os.path.join(ROOT, "js", "main.js")]
 files += glob.glob(os.path.join(ROOT, "works", "*.html"))
 for path in files:
     with open(path, encoding="utf-8") as f:

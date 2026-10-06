@@ -1,0 +1,411 @@
+{
+  "works": [
+    {
+      "slug": "koaengine",
+      "kind": "main",
+      "title": "koaEngine（自作エンジン）",
+      "meta": "就活作品 ・ 1人 ・ 約1年半",
+      "summary": "沖縄の海を自作ゲームエンジンで。PBR・FFT 海面・物理ベースの水の色・DXR の屈折・大気散乱・ボリュメトリック雲",
+      "thumb": {
+        "src": "assets/img/engine/recreated-1.webp",
+        "w": 1600,
+        "h": 900,
+        "alt": "自作エンジンで描いた浅瀬と島"
+      }
+    },
+    {
+      "slug": "reprism",
+      "cat": "y2",
+      "team": true,
+      "title": "レプリズム",
+      "youtube": "GqzL1yluQMc",
+      "video": "",
+      "main": {
+        "src": "assets/img/works/reprism-title.webp",
+        "w": 1600,
+        "h": 848,
+        "caption": "Title"
+      },
+      "shots": [
+        {
+          "src": "assets/img/works/reprism-game1.webp",
+          "w": 1600,
+          "h": 842
+        },
+        {
+          "src": "assets/img/works/reprism-game2.webp",
+          "w": 1600,
+          "h": 845
+        }
+      ],
+      "thumb": {
+        "src": "assets/img/works/y2-reprism.webp",
+        "w": 1600,
+        "h": 824
+      },
+      "env": "DirectX12",
+      "envNote": "CoreEngine",
+      "people": "3人",
+      "period": "4ヶ月",
+      "summary": "自作エンジンで作った初めての完全 2D ゲーム",
+      "body": [
+        "自作エンジンで行う初めての完全 2D ゲームを作成しました。タイトル・ステージセレクト・ゲームシーン・演出面などを担当しました。",
+        "2D のテクスチャに<em class=\"hl\">シェーダーを使って演出を鮮やか</em>にしたり、テクスチャアニメーションでは表現が難しい演出などを、全てシェーダーを使用して画面が鮮やかになるように意識しました。"
+      ],
+      "gallery": []
+    },
+    {
+      "slug": "backlash",
+      "cat": "y2",
+      "team": true,
+      "title": "バックラッシュ",
+      "youtube": "",
+      "video": "",
+      "main": {
+        "src": "assets/img/works/y2-backlash.webp",
+        "w": 1280,
+        "h": 720,
+        "caption": "Title"
+      },
+      "shots": [],
+      "thumb": {
+        "src": "assets/img/works/y2-backlash.webp",
+        "w": 1280,
+        "h": 720
+      },
+      "env": "",
+      "envNote": "",
+      "people": "",
+      "period": "",
+      "summary": "",
+      "body": [],
+      "gallery": []
+    },
+    {
+      "slug": "biripiyo",
+      "cat": "y2",
+      "team": true,
+      "title": "ゲキトツ！ビリぴよランブル",
+      "youtube": "ebMjJN3VPf4",
+      "video": "",
+      "main": {
+        "src": "assets/img/works/biripiyo-title.webp",
+        "w": 1600,
+        "h": 900,
+        "caption": "Title"
+      },
+      "shots": [
+        {
+          "src": "assets/img/works/biripiyo-game1.webp",
+          "w": 1600,
+          "h": 900
+        },
+        {
+          "src": "assets/img/works/biripiyo-game2.webp",
+          "w": 1597,
+          "h": 900
+        }
+      ],
+      "thumb": {
+        "src": "assets/img/works/y2-biripiyo.webp",
+        "w": 1600,
+        "h": 900
+      },
+      "env": "DirectX12",
+      "envNote": "CoreEngine",
+      "people": "3人",
+      "period": "1ヶ月",
+      "summary": "回転しながら敵にゲキトツする、UI も含めて全部ボクセルのアクション",
+      "body": [
+        "プレイヤーは回転しながら敵にゲキトツし、雷があるステージ 4 隅にぶつけるアクションゲームです。UI を含むゲーム内にある全てがボクセルで構成されています。",
+        "タイトルシーンをメインとして担当しました。<em class=\"hl\">タイトルからユーザーに気を引いてもらえる</em>ように背景で敵とプレイヤーが追いかけっこをしている演出を入れたり、<em class=\"hl\">ボクセルによる稲妻の演出に特に力を入れました</em>。"
+      ],
+      "gallery": []
+    },
+    {
+      "slug": "chainrope",
+      "cat": "y2",
+      "team": true,
+      "title": "チェインロープ",
+      "youtube": "S9ddgf2_-Ak",
+      "video": "",
+      "main": {
+        "src": "assets/img/works/chainrope-title.webp",
+        "w": 1600,
+        "h": 862,
+        "caption": "Title"
+      },
+      "shots": [
+        {
+          "src": "assets/img/works/chainrope-game1.webp",
+          "w": 1600,
+          "h": 852
+        },
+        {
+          "src": "assets/img/works/chainrope-game2.webp",
+          "w": 1600,
+          "h": 857
+        }
+      ],
+      "thumb": {
+        "src": "assets/img/works/y2-chainrope.webp",
+        "w": 1600,
+        "h": 862
+      },
+      "env": "DirectX12",
+      "envNote": "",
+      "people": "3人",
+      "period": "1ヶ月",
+      "summary": "アンカーポイントを目掛けてチェーンを伸ばし、ゴールを目指す",
+      "body": [
+        "マップに配置されているアンカーポイントを目掛けてチェーンを伸ばし、ゴールを目指すゲームです。",
+        "タイトルシーンとステージセレクトシーン、ゲームシーンの演出の部分を担当しました。自分以外のエンジンを使った初めての制作だったので、試行錯誤しながらシェーダーを使った演出に力を入れました。<br>セレクトシーンの背景やシーン遷移など、<em class=\"hl\">どんな演出にしたら世界観とマッチするのか？</em>を意識して実装しました。"
+      ],
+      "gallery": []
+    },
+    {
+      "slug": "gungagan",
+      "cat": "y2",
+      "team": true,
+      "title": "GUNGAGAN",
+      "youtube": "",
+      "video": "",
+      "main": {
+        "src": "assets/img/works/y2-gungagan.webp",
+        "w": 1595,
+        "h": 892,
+        "caption": "Title"
+      },
+      "shots": [],
+      "thumb": {
+        "src": "assets/img/works/y2-gungagan.webp",
+        "w": 1595,
+        "h": 892
+      },
+      "env": "",
+      "envNote": "",
+      "people": "",
+      "period": "",
+      "summary": "",
+      "body": [],
+      "gallery": []
+    },
+    {
+      "slug": "hatou",
+      "cat": "y2",
+      "team": true,
+      "title": "波闘",
+      "youtube": "",
+      "video": "",
+      "main": {
+        "src": "assets/img/works/y2-hatou.webp",
+        "w": 995,
+        "h": 550,
+        "caption": "Title"
+      },
+      "shots": [],
+      "thumb": {
+        "src": "assets/img/works/y2-hatou.webp",
+        "w": 995,
+        "h": 550
+      },
+      "env": "",
+      "envNote": "",
+      "people": "",
+      "period": "",
+      "summary": "",
+      "body": [],
+      "gallery": []
+    },
+    {
+      "slug": "chrono",
+      "cat": "y1",
+      "team": true,
+      "title": "CHRONO_",
+      "youtube": "8Q3ayGV7hfs",
+      "video": "",
+      "main": {
+        "src": "assets/img/works/chrono-title.webp",
+        "w": 1280,
+        "h": 720,
+        "caption": "Title"
+      },
+      "shots": [
+        {
+          "src": "assets/img/works/chrono-game1.webp",
+          "w": 1280,
+          "h": 720
+        },
+        {
+          "src": "assets/img/works/chrono-game2.webp",
+          "w": 1280,
+          "h": 720
+        }
+      ],
+      "thumb": {
+        "src": "assets/img/works/y1-chrono.webp",
+        "w": 1280,
+        "h": 720
+      },
+      "env": "学内製エンジン",
+      "envNote": "",
+      "people": "3人",
+      "period": "1ヶ月",
+      "summary": "時間を止めて敵をクリックし、沢山連鎖させてスコアを稼ぐ",
+      "body": [
+        "制限時間内に、時間を止めて敵をクリックし沢山連鎖させてスコアを稼ぐゲームです。",
+        "タイトルシーンとゲームシーンのシステム部分の土台を制作しました。<em class=\"hl\">学内製エンジンをチームメンバーがより簡単に扱える</em>ようにし、行列演算やゲームを支えるコア部分の設計に力を入れました。"
+      ],
+      "gallery": []
+    },
+    {
+      "slug": "kunaibu",
+      "cat": "y1",
+      "team": true,
+      "title": "クナイブ",
+      "youtube": "",
+      "video": "",
+      "main": {
+        "src": "assets/img/works/y1-kunaibu.webp",
+        "w": 1600,
+        "h": 875,
+        "caption": "Title"
+      },
+      "shots": [],
+      "thumb": {
+        "src": "assets/img/works/y1-kunaibu.webp",
+        "w": 1600,
+        "h": 875
+      },
+      "env": "",
+      "envNote": "",
+      "people": "",
+      "period": "",
+      "summary": "",
+      "body": [],
+      "gallery": []
+    },
+    {
+      "slug": "mawarazaru",
+      "cat": "y1",
+      "team": true,
+      "title": "まわらザルをえない",
+      "youtube": "SWsgfPGlIh4",
+      "video": "",
+      "main": {
+        "src": "assets/img/works/mawarazaru-title.webp",
+        "w": 1595,
+        "h": 896,
+        "caption": "Title"
+      },
+      "shots": [
+        {
+          "src": "assets/img/works/mawarazaru-game1.webp",
+          "w": 1592,
+          "h": 896
+        },
+        {
+          "src": "assets/img/works/mawarazaru-game2.webp",
+          "w": 1596,
+          "h": 889
+        }
+      ],
+      "thumb": {
+        "src": "assets/img/works/y1-mawarazaru.webp",
+        "w": 1595,
+        "h": 896
+      },
+      "env": "学内製エンジン",
+      "envNote": "",
+      "people": "3人",
+      "period": "1ヶ月",
+      "summary": "回転するサルを操作し、タイミング良くポールをジャンプしてゴールを目指す",
+      "body": [
+        "回転するサルを操作し、タイミング良くポールをジャンプしながらゴールを目指すゲームです。",
+        "タイトルシーンがメインだったので、ゲームにおいて<em class=\"hl\">一番最初に見られる画面に動きを沢山付けて</em>、目を引くような演出になるように制作しました。"
+      ],
+      "gallery": []
+    },
+    {
+      "slug": "untitled-y1",
+      "cat": "y1",
+      "team": true,
+      "title": "",
+      "youtube": "",
+      "video": "",
+      "main": {
+        "src": "assets/img/works/y1-dungeon.webp",
+        "w": 1597,
+        "h": 892,
+        "caption": "Game"
+      },
+      "shots": [],
+      "thumb": {
+        "src": "assets/img/works/y1-dungeon.webp",
+        "w": 1597,
+        "h": 892
+      },
+      "env": "",
+      "envNote": "",
+      "people": "",
+      "period": "",
+      "summary": "",
+      "body": [],
+      "gallery": []
+    },
+    {
+      "slug": "nigeru",
+      "cat": "y1",
+      "team": true,
+      "title": "逃げるかかち",
+      "youtube": "",
+      "video": "",
+      "main": {
+        "src": "assets/img/works/y1-nigeru.webp",
+        "w": 1599,
+        "h": 893,
+        "caption": "Title"
+      },
+      "shots": [],
+      "thumb": {
+        "src": "assets/img/works/y1-nigeru.webp",
+        "w": 1599,
+        "h": 893
+      },
+      "env": "",
+      "envNote": "",
+      "people": "",
+      "period": "",
+      "summary": "",
+      "body": [],
+      "gallery": []
+    },
+    {
+      "slug": "hansha",
+      "cat": "y1",
+      "team": true,
+      "title": "反射迎撃作戦",
+      "youtube": "",
+      "video": "",
+      "main": {
+        "src": "assets/img/works/y1-hansha.webp",
+        "w": 1600,
+        "h": 893,
+        "caption": "Title"
+      },
+      "shots": [],
+      "thumb": {
+        "src": "assets/img/works/y1-hansha.webp",
+        "w": 1600,
+        "h": 893
+      },
+      "env": "",
+      "envNote": "",
+      "people": "",
+      "period": "",
+      "summary": "",
+      "body": [],
+      "gallery": []
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>ポートフォリオエディタ</title>
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Outfit:wght@400;600&display=swap">
+<link rel="stylesheet" href="editor.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="brand"><span class="brand-wave" aria-hidden="true"></span>Portfolio Editor</div>
+  <p class="state" data-state>読み込み中…</p>
+  <div class="bar-actions">
+    <a class="btn is-ghost" href="/index.html" target="_blank" rel="noopener">手元のサイトを見る ↗</a>
+    <button class="btn is-ghost" type="button" data-open-git>公開（git）<span class="badge" data-git-badge hidden>0</span></button>
+    <button class="btn is-primary" type="button" data-save disabled>保存 <kbd>Ctrl+S</kbd></button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="side">
+    <p class="side-head">作品 <small>上から順にトップの一覧に並びます（ドラッグで並べ替え）</small></p>
+    <ul class="list" data-list></ul>
+    <button class="btn is-add" type="button" data-add>＋ 作品を追加</button>
+  </aside>
+
+  <section class="form" data-form aria-label="作品の内容"></section>
+
+  <section class="preview">
+    <div class="preview-bar">
+      <div class="seg" role="group" aria-label="プレビューするページ">
+        <button type="button" data-pv-page="work" aria-pressed="true">作品ページ</button>
+        <button type="button" data-pv-page="index" aria-pressed="false">トップの一覧</button>
+      </div>
+      <div class="seg" role="group" aria-label="画面の幅">
+        <button type="button" data-pv-size="pc" aria-pressed="true">PC</button>
+        <button type="button" data-pv-size="sp" aria-pressed="false">スマホ</button>
+      </div>
+      <button class="icon-btn" type="button" data-pv-reload title="プレビューを読み直す">↻</button>
+      <span class="pv-note">保存前の内容で表示しています</span>
+    </div>
+    <div class="preview-stage" data-stage>
+      <iframe data-frame title="プレビュー"></iframe>
+    </div>
+  </section>
+</div>
+
+<div class="drawer" data-git hidden>
+  <div class="drawer-backdrop" data-close-git></div>
+  <aside class="drawer-panel" aria-label="公開（git）">
+    <div class="drawer-head">
+      <h2>公開（git）</h2>
+      <button class="icon-btn" type="button" data-close-git aria-label="閉じる">×</button>
+    </div>
+    <p class="git-branch" data-git-branch></p>
+    <div class="git-row">
+      <button class="btn is-ghost is-small" type="button" data-git-fetch>更新を確認</button>
+      <button class="btn is-ghost is-small" type="button" data-git-pull>最新を取り込む（pull）</button>
+    </div>
+    <h3>変更されたファイル</h3>
+    <ul class="git-files" data-git-files></ul>
+    <label class="field">
+      <span>コミットの説明</span>
+      <input type="text" data-git-msg>
+    </label>
+    <div class="git-row">
+      <button class="btn is-primary" type="button" data-git-publish>コミットして公開</button>
+      <button class="btn is-ghost" type="button" data-git-commit>コミットだけ</button>
+      <button class="btn is-ghost" type="button" data-git-push>公開だけ（push）</button>
+    </div>
+    <p class="git-pages" data-git-pages hidden></p>
+    <pre class="git-log" data-git-log hidden></pre>
+    <h3>最近のコミット</h3>
+    <ul class="git-commits" data-git-commits></ul>
+    <p class="git-help">「コミット」は手元に記録するだけです。「公開」で GitHub に送ると、1〜2 分で <a href="https://tanahara0310.github.io/" target="_blank" rel="noopener">tanahara0310.github.io</a> に反映されます。</p>
+  </aside>
+</div>
+
+<div class="toasts" data-toasts aria-live="polite"></div>
+<input type="file" data-file hidden>
+
+<script type="module" src="editor.js"></script>
+</body>
+</html>

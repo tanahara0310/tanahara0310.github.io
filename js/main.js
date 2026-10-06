@@ -1,10 +1,12 @@
-import { createOcean, oceanError } from './ocean.js?v=202610070051';
+import { createOcean, oceanError } from './ocean.js?v=202610070131';
 
 const root = document.documentElement;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 // ?still を付けると波の時間を止める（見た目を同じ条件で比べる用）
 const still = new URLSearchParams(window.location.search).has('still');
-const calm = reducedMotion || still;
+// ?edit はエディタのプレビュー。板をすぐ出し、実績や見た作品を記録しない
+const editing = new URLSearchParams(window.location.search).has('edit');
+const calm = reducedMotion || still || editing;
 
 // スクロール量を水深に（範囲はページごとに body の data-depth="浅い,深い"）
 const [DEPTH_TOP, DEPTH_BOTTOM] = (document.body.dataset.depth || '1.2,48').split(',').map(Number);
@@ -210,7 +212,7 @@ function nextToast() {
 }
 
 function unlock(key) {
-  if (unlocked[key] || !ACH_BY_KEY[key]) return;
+  if (editing || unlocked[key] || !ACH_BY_KEY[key]) return;
   unlocked[key] = Date.now();
   store.set('ach', unlocked);
   renderAch(key);
@@ -246,7 +248,7 @@ if (resetBtn) {
 // ===== 見た作品 =====
 const seen = new Set(store.get('seen', []));
 const work = document.body.dataset.work;
-if (work && work !== 'new-work') {
+if (work && !editing) {
   seen.add(work);
   store.set('seen', [...seen]);
 }
@@ -381,7 +383,7 @@ function emerge(el, order) {
   setTimeout(() => requestAnimationFrame(step), delay);
 }
 
-if ('IntersectionObserver' in window && !reducedMotion) {
+if ('IntersectionObserver' in window && !reducedMotion && !editing) {
   const io = new IntersectionObserver((entries) => {
     let order = 0;
     for (const en of entries) {
@@ -513,6 +515,17 @@ document.addEventListener('click', (e) => {
     return;
   }
   const yt = e.target.closest('[data-yt]');
+  const file = e.target.closest('[data-video]');
+  if (file && file.dataset.video) {
+    const video = document.createElement('video');
+    video.src = file.dataset.video;
+    video.controls = true;
+    video.autoplay = true;
+    video.playsInline = true;
+    openViewer(video, file.dataset.title || '');
+    unlock('video');
+    return;
+  }
   if (yt && yt.dataset.yt) {
     const frame = document.createElement('iframe');
     frame.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(yt.dataset.yt)}?autoplay=1&rel=0&playsinline=1`;

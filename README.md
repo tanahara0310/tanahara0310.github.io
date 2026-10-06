@@ -12,33 +12,23 @@
 
 ```
 index.html              トップ（表紙・就活作品・作品一覧・自己紹介・実績）
-works/koaengine.html    就活作品 koaEngine
-works/*.html            チーム作品 1 本につき 1 ページ
+works/koaengine.html    就活作品 koaEngine（専用の作り。手で編集する）
+works/*.html            チーム作品 1 本につき 1 ページ（content/works.json から自動で作る）
+content/works.json      作品のデータ（名前・学年・画像・動画・開発概要・文章・一覧のカード）
 css/style.css           見た目
 js/main.js              波紋・板の浮き沈みと影・水深計・実績・絞り込み・カードめくり・拡大表示・動画・時刻スライダー
 js/ocean.js             背景の海（波の高さ場の計算と描画のシェーダー）
 assets/img/             画像（engine / works / profile / icons）
+assets/video/           エディタで入れた動画ファイル
+tools/editor.bat        エディタを起動する（ダブルクリック）
+tools/editor.py         エディタのサーバー（保存・画像の変換・プレビュー・git）
+tools/editor/           エディタの画面
+tools/pages.py          content/works.json からページを作り直す
 tools/serve.py          手元で確認するためのサーバー
 tools/bump.py           JS と CSS の版番号を新しくする
-tools/work-template.html  新しい作品のページの雛形
 ```
 
-チーム作品のページ:
-
-| ファイル | 作品 | 学年 | 中身 |
-| --- | --- | --- | --- |
-| `works/hansha.html` | 反射迎撃作戦 | 1年生 | 準備中 |
-| `works/nigeru.html` | 逃げるかかち | 1年生 | 準備中 |
-| `works/untitled-y1.html` | （作品名） | 1年生 | 準備中（作品名も） |
-| `works/mawarazaru.html` | まわらザルをえない | 1年生 | あり |
-| `works/kunaibu.html` | クナイブ | 1年生 | 準備中 |
-| `works/chrono.html` | CHRONO_ | 1年生 | あり |
-| `works/hatou.html` | 波闘 | 2年生 | 準備中 |
-| `works/gungagan.html` | GUNGAGAN | 2年生 | 準備中 |
-| `works/chainrope.html` | チェインロープ | 2年生 | あり |
-| `works/biripiyo.html` | ゲキトツ！ビリぴよランブル | 2年生 | あり |
-| `works/backlash.html` | バックラッシュ | 2年生 | 準備中 |
-| `works/reprism.html` | レプリズム | 2年生 | あり |
+チーム作品のページ（`works/*.html`）と、トップの作品一覧のカード・作品の数・前後の作品へのリンク・`js/main.js` の `ALL_WORKS` は、`content/works.json` から自動で作ります。これらを手で直しても次の保存で上書きされるので、エディタで直してください。
 
 ## 手元で確認する
 
@@ -50,27 +40,25 @@ python tools/serve.py
 
 `?still` を付ける（http://localhost:8000/?still）と波が止まるので、見た目を同じ条件で比べられます。
 
-## 準備中のページを埋める
+## エディタで作品を書く
 
-`works/` の該当ページを開き、`✎` で検索すると、書く場所の前に説明のコメントがあります。
+`tools/editor.bat` をダブルクリックすると（または `python tools/editor.py`）、ブラウザでエディタが開きます。止めるときは黒い窓を閉じます。
 
-- 文章: `<p class="todo">…準備中です。</p>` を書き換え、`class="todo"` を消す。強調は `<em class="hl">…</em>`
-- 開発概要: `<i class="todo">準備中</i>` を `学内製エンジン` のような文字に置き換える
-- ゲーム画面: `assets/img/works/作品名-game1.webp`（幅 1600）と `作品名-game1-sm.webp`（幅 800）を置き、`<div class="img-todo">…</div>` をコメントの例の `<img>` に置き換える
-- 動画: `data-yt=""` に YouTube の動画 ID（`watch?v=` の後ろ）を入れるとボタンが出る
-- 作品名を直したとき（`untitled-y1.html` など）は、ページ内の `（作品名）`、`index.html` の一覧の名前、前後の作品のページの「前の作品／次の作品」も直す
-- 埋めたら `index.html` の作品一覧のカード（`data-slug="作品名"`）も直す：`is-wip` を消し、`wcard-meta` の「準備中」を開発環境・人数・期間に、`wcard-text` に一言紹介を足す
+- 左：作品の一覧。押すと編集、ドラッグでトップの一覧の並び順を変える。「＋ 作品を追加」で新しい作品
+- 真ん中：作品名・学年・チーム／個人・URL の名前・YouTube の URL か動画ファイル・画像（メイン、ゲーム画面 2 枚、その他の画面、一覧のサムネイル）・開発概要・作品紹介の文章・一覧の一言紹介
+- 右：保存前の内容で作った実際のページ（作品ページ／トップの一覧、PC／スマホ）
 
-## 作品を足す
+画像は枠にドロップするか、クリックで選ぶか、枠を選んで Ctrl+V で貼ります。幅 1600 と 800 の webp に変換して `assets/img/works/` に置きます。動画ファイル（mp4 / webm）は 95MB まで（GitHub の上限が 100MB）。長い動画は YouTube に上げて URL を入れてください。
 
-1. `tools/work-template.html` を `works/英字の名前.html` にコピーして `✎` の所を埋める
-2. `index.html` の作品一覧に `<li class="wcard" data-float data-slug="英字の名前" data-cat="y2">…</li>` を 1 枚足す（ほかのカードをコピーして書き換える）
-3. 作品の数を直す：`index.html` の「13」（表紙の数字と作品一覧の説明）と、`js/main.js` の `ALL_WORKS`（全作品制覇の実績に使う）に英字の名前を足す
-4. 前後の作品のページの「前の作品／次の作品」のリンクを、新しいページを指すように直す
+文章は Enter で段落、Shift+Enter で段落の中の改行。強調したい所を選んで「強調」（Ctrl+B）。文章が空のあいだは、ページは「準備中」の表示、一覧のカードも「準備中」になります。
+
+Ctrl+S で保存すると、ページを作り直し、どの作品も使わなくなった画像・動画を消します。
+
+右上の「公開（git）」で、変わったファイルの一覧・コミット・公開（push）・最新の取り込み（pull）ができます。「コミットして公開」を押すと、1〜2 分で公開サイトに反映され、反映されたら知らせます。CSS や JS が変わっているときは、コミットの前に自動で版番号を新しくします。
 
 ## 公開する
 
-JS や CSS を変えたら、push の前に版番号を新しくします（見る人のブラウザが古いファイルを使い続けないように）。
+エディタの「公開（git）」から公開できます。手で push するときは、JS や CSS を変えたら先に版番号を新しくします（見る人のブラウザが古いファイルを使い続けないように）。
 
 ```bash
 python tools/bump.py

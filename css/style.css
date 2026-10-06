@@ -1029,6 +1029,8 @@ mark { background: linear-gradient(transparent 60%, rgba(10, 147, 166, 0.22) 60%
 .dev dd > span:first-child { width: 5em; flex-shrink: 0; font-weight: 500; color: var(--sub); }
 .work-text { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
 .work-text h4 { margin-bottom: 8px; font-size: 16px; color: var(--ink); }
+.work-gallery { margin-top: 22px; padding-top: 4px; border-top: 1px solid var(--line); }
+.work-gallery .trio { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
 .hl { font-style: normal; font-weight: 800; color: var(--ink); background: linear-gradient(transparent 60%, rgba(10, 147, 166, 0.22) 60%); }
 .todo { font-style: normal; color: var(--sub); }
 p.todo { padding: 6px 12px; border-radius: 12px; background: var(--glass-soft); }
@@ -1095,6 +1097,7 @@ p.todo { padding: 6px 12px; border-radius: 12px; background: var(--glass-soft); 
 .viewer::backdrop { background: rgba(3, 22, 34, 0.86); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .viewer-body img { width: 100%; max-height: 82vh; object-fit: contain; border-radius: 14px; }
 .viewer-body iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 14px; background: #000; }
+.viewer-body video { display: block; width: 100%; max-height: 82vh; border-radius: 14px; background: #000; }
 .viewer-caption { margin: 10px 0 0; text-align: center; font-size: 13px; color: #fff; }
 .viewer-caption a { color: #9fe7ef; }
 .viewer-close {
