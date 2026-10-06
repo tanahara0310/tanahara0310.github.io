@@ -54,6 +54,7 @@ void main() {
 
 const NW = 10;
 const MAX_RECTS = 24;
+const MAX_FISH = 28;
 
 const RENDER_FS = `#version 300 es
 precision highp float;
@@ -73,6 +74,9 @@ uniform float uSimAmp;
 uniform vec4 uRects[${MAX_RECTS}];
 uniform float uRectA[${MAX_RECTS}];
 uniform int uRectCount;
+uniform vec4 uFishA[${MAX_FISH}];
+uniform vec4 uFishB[${MAX_FISH}];
+uniform int uFishCount;
 uniform vec4 uWaveA[${NW}];
 uniform vec2 uWaveB[${NW}];
 
@@ -183,6 +187,32 @@ float panelShadow(vec2 p, float blur) {
   return s;
 }
 
+// 魚の形（体長 1・頭が +x）。胴は尾へ向かってしなり、尾びれは三角
+float fishShape(vec2 q, float tail) {
+  q.y += sin(tail - q.x * 5.0) * 0.07 * smoothstep(0.35, -0.6, q.x);
+  float body = (length(q * vec2(1.0, 1.85)) - 0.5) / 1.6;
+  vec2 tq = q - vec2(-0.47, 0.0);
+  float fin = max(max(abs(tq.y) + tq.x * 1.25 - 0.03, tq.x), -0.26 - tq.x);
+  return min(body, fin);
+}
+
+// 種類ごとの色。0 黄、1 青に黄色の尾、2 オレンジに白い縞、3 大きな魚影
+vec3 fishAlbedo(float kind, vec2 q) {
+  vec3 a;
+  if (kind < 0.5) {
+    a = vec3(0.95, 0.78, 0.08);
+  } else if (kind < 1.5) {
+    a = q.x < -0.42 ? vec3(0.95, 0.80, 0.10) : vec3(0.05, 0.24, 0.85);
+  } else if (kind < 2.5) {
+    float st = max(max(1.0 - smoothstep(0.03, 0.06, abs(q.x - 0.22)), 1.0 - smoothstep(0.03, 0.06, abs(q.x + 0.08))),
+                   1.0 - smoothstep(0.02, 0.05, abs(q.x + 0.34)));
+    a = mix(vec3(0.95, 0.36, 0.04), vec3(0.95), st);
+  } else {
+    a = vec3(0.025, 0.04, 0.05);
+  }
+  return a * mix(0.7, 1.0, smoothstep(0.0, 0.16, abs(q.y)));
+}
+
 vec3 aces(vec3 x) {
   return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
 }
@@ -251,12 +281,47 @@ void main() {
   vec3 Tdown = exp(-sigT * D / cosS);
   vec3 Tup = exp(-sigT * D);
   vec2 toSun = LsW.xy / LsW.z * D * uPxPerM;
-  float shadow = panelShadow(sp + toSun, 4.0 + D * 9.0) * 0.8 * (1.0 - smoothstep(3.0, 16.0, D));
+  float shadow = panelShadow(sp + toSun, 4.0 + D * 9.0) * 0.8;
+  for (int i = 0; i < ${MAX_FISH}; i++) {
+    if (i >= uFishCount) break;
+    vec4 A = uFishA[i];
+    vec4 B = uFishB[i];
+    float df = min(B.y, D * 0.85);
+    vec2 ps = sp + toSun * ((D - df) / max(D, 0.01)) - A.xy;
+    float reach = A.w * 0.7 + 6.0 + (D - df) * 9.0;
+    if (dot(ps, ps) > reach * reach) continue;
+    vec2 dir = vec2(cos(A.z), sin(A.z));
+    vec2 q = vec2(dot(ps, dir), dot(ps, vec2(-dir.y, dir.x))) / A.w;
+    float blur = (2.0 + (D - df) * 9.0) / A.w;
+    shadow = max(shadow, (1.0 - smoothstep(-blur, blur, fishShape(q, B.z))) * B.w * 0.6);
+  }
+  shadow *= 1.0 - smoothstep(3.0, 16.0, D);
   vec3 Ef = Esun * cosS * Tdown * caust * lam * (1.0 - shadow) + Esky * Tup * 0.55 * (1.0 - shadow * 0.35);
   vec3 Lf = alb / PI * Ef * Tup;
   vec3 kk = sigT * (1.0 + 1.0 / cosS);
   vec3 Lin = sigS * (Esun + Esky) / (4.0 * PI) * (1.0 - exp(-kk * D)) / kk * 3.2;
   vec3 Lsub = Lf + Lin;
+
+  // 魚：深さのぶん水に色を吸われ、波の屈折で揺れて見える
+  for (int i = 0; i < ${MAX_FISH}; i++) {
+    if (i >= uFishCount) break;
+    vec4 A = uFishA[i];
+    vec4 B = uFishB[i];
+    float df = min(B.y, D * 0.85);
+    vec2 pv = sp + off * uPxPerM * (df / max(D, 0.01)) - A.xy;
+    float reach = A.w * 0.7 + 6.0 + df * 3.0;
+    if (dot(pv, pv) > reach * reach) continue;
+    vec2 dir = vec2(cos(A.z), sin(A.z));
+    vec2 q = vec2(dot(pv, dir), dot(pv, vec2(-dir.y, dir.x))) / A.w;
+    float aa = (1.2 + df * 2.5) / A.w;
+    float cov = (1.0 - smoothstep(-aa, aa, fishShape(q, B.z))) * B.w;
+    if (cov <= 0.0) continue;
+    vec3 Tf = exp(-sigT * df);
+    vec3 Ef2 = Esun * cosS * exp(-sigT * df / cosS) * mix(vec3(1.0), caust, 0.6) + Esky * Tf * 0.55;
+    vec3 Lin2 = sigS * (Esun + Esky) / (4.0 * PI) * (1.0 - exp(-kk * df)) / kk * 3.2;
+    vec3 Lfish = fishAlbedo(B.x, q) / PI * Ef2 * Tf + Lin2;
+    Lsub = mix(Lsub, Lfish, cov);
+  }
 
   // 水面の反射とサンキラ
   float NoV = max(dot(N, V), 0.0);
@@ -295,6 +360,11 @@ void main() {
   col += (hash12(gl_FragCoord.xy + fract(t) * 100.0) - 0.5) / 255.0;
   outColor = vec4(col, 1.0);
 }`;
+
+function smoothstepJS(a, b, x) {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+}
 
 function mulberry32(a) {
   return () => {
@@ -457,6 +527,117 @@ export function createOcean(canvas, opts) {
 
   const drops = [];
   let lastScroll = opts.getScroll();
+
+  // 魚の群れ（位置は画面の CSS px）
+  const fishA = new Float32Array(MAX_FISH * 4);
+  const fishB = new Float32Array(MAX_FISH * 4);
+  const schools = [];
+  const fish = [];
+  const frand = mulberry32(31);
+
+  function seedFish() {
+    fish.length = 0;
+    schools.length = 0;
+    const W = viewW || window.innerWidth;
+    const H = viewH || window.innerHeight;
+    const kinds = [0, 1, 2, 1, 0];
+    kinds.forEach((kind) => {
+      const school = { h: frand() * Math.PI * 2, turn: 0, next: 0 };
+      schools.push(school);
+      const cx = frand() * W;
+      const cy = frand() * H;
+      const n = kind === 2 ? 3 : 4 + Math.floor(frand() * 3);
+      for (let i = 0; i < n && fish.length < MAX_FISH - 2; i++) {
+        fish.push({
+          school, kind,
+          x: cx + (frand() - 0.5) * 170, y: cy + (frand() - 0.5) * 120, h: school.h,
+          lenM: (kind === 2 ? 0.22 : 0.27) * (0.85 + frand() * 0.35),
+          depthFrac: 0.35 + frand() * 0.45, depthMax: 3.2,
+          base: 0.28 + frand() * 0.12, phase: frand() * 6, jitter: frand() * 6.28,
+          flee: 0, fx: 0, fy: 0,
+        });
+      }
+    });
+    for (let i = 0; i < 2; i++) {
+      const school = { h: frand() * Math.PI * 2, turn: 0, next: 0 };
+      schools.push(school);
+      fish.push({
+        school, kind: 3,
+        x: frand() * W, y: frand() * H, h: school.h,
+        lenM: 1.3 + frand() * 0.8, depthFrac: 1, depthMax: 4.5 + frand() * 3.5,
+        base: 0.13 + frand() * 0.05, phase: frand() * 6, jitter: frand() * 6.28,
+        flee: 0, fx: 0, fy: 0,
+      });
+    }
+  }
+
+  function angleTo(from, to) {
+    let d = to - from;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    return d;
+  }
+
+  function updateFish(dt, scrollDelta) {
+    const m = pxPerM();
+    const W = viewW;
+    const H = viewH;
+    for (const sc of schools) {
+      sc.next -= dt;
+      if (sc.next <= 0) {
+        sc.turn = (frand() - 0.5) * 0.7;
+        sc.next = 2 + frand() * 4;
+      }
+      sc.h += sc.turn * dt;
+      sc.cx = 0; sc.cy = 0; sc.n = 0;
+    }
+    for (const f of fish) { f.school.cx += f.x; f.school.cy += f.y; f.school.n++; }
+    for (const sc of schools) { sc.cx /= sc.n || 1; sc.cy /= sc.n || 1; }
+
+    for (const f of fish) {
+      const sc = f.school;
+      let want = sc.h + Math.sin(time * 0.9 + f.jitter) * 0.3;
+      const dx = sc.cx - f.x;
+      const dy = sc.cy - f.y;
+      if (Math.hypot(dx, dy) > m * 0.6) want = Math.atan2(dy, dx);
+      let rate = 1.6;
+      if (f.flee > 0) {
+        want = Math.atan2(f.fy, f.fx);
+        rate = 9;
+        f.flee -= dt;
+      }
+      f.h += angleTo(f.h, want) * Math.min(1, dt * rate);
+      const speed = f.base * m * (1 + 3.2 * Math.max(0, f.flee));
+      f.x += Math.cos(f.h) * speed * dt;
+      f.y += Math.sin(f.h) * speed * dt - scrollDelta * 0.8;
+      f.phase += dt * (5 + speed / m * 9);
+    }
+    // 群れごと画面の外へ出たら反対側から戻る
+    for (const sc of schools) {
+      const mx = 220;
+      let sx = 0;
+      let sy = 0;
+      if (sc.cx < -mx) sx = W + mx * 2; else if (sc.cx > W + mx) sx = -(W + mx * 2);
+      if (sc.cy < -mx) sy = H + mx * 2; else if (sc.cy > H + mx) sy = -(H + mx * 2);
+      if (sx || sy) for (const f of fish) if (f.school === sc) { f.x += sx; f.y += sy; }
+    }
+  }
+
+  function uploadFish(L) {
+    const m = pxPerM();
+    const tropical = 1 - smoothstepJS(12, 28, depth);
+    const shadowFish = smoothstepJS(3, 9, depth) * 0.85;
+    fishA.fill(0);
+    fishB.fill(0);
+    fish.forEach((f, i) => {
+      const dm = f.kind === 3 ? f.depthMax : Math.min(f.depthMax, Math.max(0.25, depth * f.depthFrac));
+      fishA.set([f.x, f.y, f.h, f.lenM * m], i * 4);
+      fishB.set([f.kind, dm, f.phase, f.kind === 3 ? shadowFish : tropical], i * 4);
+    });
+    gl.uniform4fv(L.uFishA, fishA);
+    gl.uniform4fv(L.uFishB, fishB);
+    gl.uniform1i(L.uFishCount, fish.length);
+  }
   const rectData = new Float32Array(MAX_RECTS * 4);
   const rectAlpha = new Float32Array(MAX_RECTS);
   let shiftAcc = 0;
@@ -499,6 +680,9 @@ export function createOcean(canvas, opts) {
     gl.viewport(0, 0, simW, simH);
 
     const scroll = opts.getScroll();
+    if (!fish.length) seedFish();
+    if (!opts.reducedMotion) updateFish(dt, scroll - lastScroll);
+    else for (const f of fish) f.y -= (scroll - lastScroll) * 0.8;
     shiftAcc += ((scroll - lastScroll) * simH) / viewH;
     lastScroll = scroll;
     let shift = Math.trunc(shiftAcc);
@@ -551,6 +735,7 @@ export function createOcean(canvas, opts) {
     gl.uniform4fv(L.uRects, rectData);
     gl.uniform1fv(L.uRectA, rectAlpha);
     gl.uniform1i(L.uRectCount, n);
+    uploadFish(L);
     gl.uniform4fv(L.uWaveA, waveA);
     gl.uniform2fv(L.uWaveB, waveB);
     quad();
@@ -584,6 +769,20 @@ export function createOcean(canvas, opts) {
     /** クリック位置（CSS px）に水滴を落とす */
     drop(x, y, radius = 26, strength = 1) {
       if (drops.length < 16) drops.push({ x, y, r: radius, s: strength });
+      if (strength >= 1.5) {
+        let scared = 0;
+        for (const f of fish) {
+          const dx = f.x - x;
+          const dy = f.y - y;
+          if (Math.hypot(dx, dy) < 260) {
+            f.flee = 1.4;
+            f.fx = dx;
+            f.fy = dy;
+            scared++;
+          }
+        }
+        if (scared && opts.onScare) opts.onScare(scared);
+      }
     },
     setDepth(m) { depthTarget = m; },
     setLight(l) { lightTarget = l; },

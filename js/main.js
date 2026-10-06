@@ -45,7 +45,7 @@ const canvas = document.getElementById('ocean');
 let ocean = null;
 try {
   const depth = depthAt(scrollProgress());
-  ocean = createOcean(canvas, { reducedMotion: calm, getScroll: () => window.scrollY, getRects: floatRects, depth, light: lightAt(depth) });
+  ocean = createOcean(canvas, { reducedMotion: calm, getScroll: () => window.scrollY, getRects: floatRects, onScare: () => unlock('fish'), depth, light: lightAt(depth) });
 } catch (e) {
   console.warn('[ocean]', e);
 }
@@ -72,7 +72,7 @@ const store = {
   },
 };
 
-const ALL_WORKS = ['koaengine', 'reprism', 'battarush', 'biripiyo', 'chainrope', 'gungagan', 'hatou',
+const ALL_WORKS = ['koaengine', 'reprism', 'backlash', 'biripiyo', 'chainrope', 'gungagan', 'hatou',
   'chrono', 'kunaibu', 'mawarazaru', 'untitled-y1', 'nigeru', 'hansha'];
 
 // ===== 実績 =====
@@ -85,6 +85,7 @@ const ACHIEVEMENTS = [
   { key: 'abyss', icon: '底', title: '海の底', text: 'ページのいちばん下まで潜った', hint: 'いちばん下まで' },
   { key: 'main', icon: '主', title: 'メインクエスト', text: '就活作品のページをひらいた', hint: 'いちばん大事な作品を見る' },
   { key: 'video', icon: '映', title: '上映会', text: '作品の動画を再生した', hint: '動画を見る' },
+  { key: 'fish', icon: '魚', title: 'おどろく熱帯魚', text: '熱帯魚をおどかした', hint: '魚の近くの水面にふれる' },
   { key: 'flip', icon: '比', title: '見比べ', text: '写真と自作エンジンのカードをめくった', hint: 'カードをめくる' },
   { key: 'sunset', icon: '夕', title: '日が暮れるまで', text: '空の時刻を夜まで動かした', hint: '空の時刻を動かす' },
   { key: 'zoom', icon: '拡', title: 'じっくり見る', text: '画像を拡大した', hint: '画像を押してみる' },
@@ -310,7 +311,7 @@ function surface(el, delay) {
 }
 
 // 深い所から水面へ。海の色に溶けた、ぼやけて揺らぐ姿から、色が抜けて大きくはっきりしていく
-const EMERGE_MS = 1800;
+const EMERGE_MS = 1000;
 const easeOut = (t) => 1 - Math.pow(1 - t, 3);
 const smooth = (a, b, x) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -320,7 +321,7 @@ const smooth = (a, b, x) => {
 function emerge(el, order) {
   const float = el.hasAttribute('data-float');
   const dur = float ? EMERGE_MS : EMERGE_MS * 0.75;
-  const delay = Math.min(order, 8) * 110;
+  const delay = Math.min(order, 8) * 70;
   const phase = order * 1.7;
   el.classList.add('is-emerging');
   let start = 0;

@@ -6,7 +6,7 @@
 
 ページの板は水に浮かぶすりガラスで、その影を背景の海底に落としています。板は画面に入ると海の中から浮き上がり（`data-float` を付けた要素）、別のページへ移るときは海へ沈んでから移ります。作品カードに触れると縁から波が立ちます。右端の水深計の目盛りを押すとその深さへ移動します。
 
-実績は 13 個（`js/main.js` の `ACHIEVEMENTS`）。解除すると右上に通知が出て、トップの「実績」に解除率と一覧が出ます。実績・見た作品・水面にふれた回数はブラウザの localStorage（`koa.ach` / `koa.seen` / `koa.ripples`）に残り、「記録をリセット」で消せます。
+実績は 14 個（`js/main.js` の `ACHIEVEMENTS`）。解除すると右上に通知が出て、トップの「実績」に解除率と一覧が出ます。実績・見た作品・水面にふれた回数はブラウザの localStorage（`koa.ach` / `koa.seen` / `koa.ripples`）に残り、「記録をリセット」で消せます。
 
 ## 構成
 
@@ -36,7 +36,7 @@ tools/work-template.html  新しい作品のページの雛形
 | `works/gungagan.html` | GUNGAGAN | 2年生 | 準備中 |
 | `works/chainrope.html` | チェインロープ | 2年生 | あり |
 | `works/biripiyo.html` | ゲキトツ！ビリぴよランブル | 2年生 | あり |
-| `works/battarush.html` | バッタラッシュ | 2年生 | 準備中 |
+| `works/backlash.html` | バックラッシュ | 2年生 | 準備中 |
 | `works/reprism.html` | レプリズム | 2年生 | あり |
 
 ## 手元で確認する

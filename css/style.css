@@ -1080,7 +1080,6 @@ p.todo { padding: 6px 12px; border-radius: 12px; background: var(--glass-soft); 
 .foot { padding: 6vh 20px 110px; text-align: center; }
 .foot-name { margin: 22px 0 4px; font-size: 15px; font-weight: 800; color: #fff; text-shadow: 0 1px 8px rgba(3, 30, 45, 0.8); }
 .foot-links a { font-family: var(--latin); font-size: 14px; color: #9fe7ef; }
-.foot-note { max-width: 580px; margin: 18px auto 10px; font-size: 12.5px; line-height: 1.9; color: #e3f4f7; text-shadow: 0 1px 8px rgba(3, 30, 45, 0.8); }
 .foot-copy { font-family: var(--latin); font-size: 12px; letter-spacing: 0.2em; color: #bfdfe6; }
 
 /* ===== 拡大表示 ===== */
