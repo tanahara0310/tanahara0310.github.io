@@ -155,7 +155,7 @@ def pager_html(w, works):
 
 
 def main_name(w):
-    """就活作品の短い名前（「koaEngine（自作エンジン）」→「koaEngine」）"""
+    """就活作品の短い名前（「CoreEngine（自作エンジン）」→「CoreEngine」）"""
     return re.sub(r"（.*?）$", "", w.get("title") or "")
 
 
