@@ -163,121 +163,136 @@ vec3 sandAlbedo(vec2 p) {
 }
 
 #if REEF
-// 海底のサンゴとイソギンチャク（p は海底の座標 m）。rgb は色、a は覆う割合、nrm は面の向き、ao は根元の暗さ
+const float REEF_CELL = 1.7;
+
+// そのマスにサンゴがあるか、あれば中心・種類・大きさ・色の揺らぎ
+bool reefItem(vec2 id, out vec2 ctr, out float kind, out float r, out float tint) {
+  float dens = smoothstep(0.35, 0.7, vnoise(id * 0.33 + 7.0));
+  vec2 h = hash22(id + 91.0);
+  ctr = (id + 0.2 + 0.6 * hash22(id + 3.0)) * REEF_CELL;
+  kind = floor(h.y * 4.0);
+  r = mix(0.34, 0.72, hash12(id + 11.0)) * (kind > 2.5 ? 0.72 : 1.0);
+  tint = hash12(id + 23.0);
+  return h.x < 0.06 + 0.42 * dens;
+}
+
+// 種類ごとの高さ（m）。0: ノウサンゴ、1: 枝サンゴ、2: テーブルサンゴ、3: イソギンチャク
+float reefHeight(float kind, vec2 v, float r, float tint, vec2 id, float t, float aa) {
+  float d = length(v);
+  float ang = atan(v.y, v.x);
+  if (kind < 0.5) {
+    float dome = sqrt(max(0.0, 1.0 - d * d / (r * r)));
+    float g = 0.5 + 0.5 * sin(dot(v, vec2(0.8, 0.6)) * 46.0 + vnoise(v * 7.0 + id) * 9.0);
+    return r * 0.5 * dome * (0.8 + 0.2 * g);
+  }
+  if (kind < 1.5) {
+    float edge = r * (0.8 + 0.28 * vnoise(vec2(ang * 2.5, tint * 9.0)));
+    float env = sqrt(max(0.0, 1.0 - d * d / (edge * edge)));
+    if (env <= 0.0) return 0.0;
+    vec2 g = v / 0.1;
+    vec2 gi = floor(g);
+    float hb = 0.0;
+    for (int bj = -1; bj <= 1; bj++) {
+      for (int bi = -1; bi <= 1; bi++) {
+        vec2 o = vec2(float(bi), float(bj));
+        vec2 hc = hash22(gi + o + id);
+        vec2 cpt = o + 0.5 + (hc - 0.5) * 0.7 - fract(g);
+        float sz = 0.32 + 0.34 * hc.x;
+        float bb = max(0.0, 1.0 - dot(cpt, cpt) / (sz * sz));
+        hb = max(hb, sqrt(bb) * (0.6 + 0.4 * hc.y));
+      }
+    }
+    return r * 0.5 * env * (0.3 + 0.7 * hb);
+  }
+  if (kind < 2.5) {
+    float edge = r * (0.9 + 0.1 * sin(ang * 9.0 + tint * 6.0));
+    float inside = 1.0 - smoothstep(edge - aa, edge + aa, d);
+    return inside * r * (0.2 + 0.012 * sin(ang * 70.0) + 0.05 * smoothstep(0.6 * edge, edge, d));
+  }
+  float sway = sin(t * 1.6 + d * 8.0 + tint * 20.0) * 0.2 * (d / r);
+  float a2 = ang + sway;
+  float lenA = r * (0.88 + 0.12 * sin(a2 * 5.0 + tint * 30.0));
+  float lenB = lenA * 0.72;
+  float rA = sqrt(max(0.0, cos(a2 * 20.0))) * (1.0 - smoothstep(lenA - aa, lenA + aa, d));
+  float rB = sqrt(max(0.0, -cos(a2 * 20.0))) * (1.0 - smoothstep(lenB - aa, lenB + aa, d));
+  float hA = rA * (0.5 + 0.5 * (1.0 - d / lenA));
+  float hB = rB * (0.7 + 0.3 * (1.0 - d / lenB));
+  float base = (1.0 - smoothstep(lenB * 0.85 - aa, lenB * 0.85 + aa, d)) * 0.3;
+  float disk = (1.0 - smoothstep(r * 0.2 - aa, r * 0.2 + aa, d)) * (0.45 - 0.25 * smoothstep(r * 0.18, 0.0, d));
+  return r * 0.4 * max(max(hA, hB), max(base, disk));
+}
+
+// 種類ごとの色（hn は 0〜1 の高さ）。沖縄の礁に近い落ち着いた色に、先だけ淡い色
+vec3 reefColor(float kind, vec2 v, float r, float tint, float hn) {
+  float d = length(v);
+  if (kind < 0.5) {
+    return mix(vec3(0.6, 0.52, 0.3), vec3(0.48, 0.55, 0.34), tint) * (0.7 + 0.3 * hn);
+  }
+  if (kind < 1.5) {
+    vec3 base = tint < 0.34 ? vec3(0.42, 0.28, 0.4) : (tint < 0.67 ? vec3(0.6, 0.47, 0.26) : vec3(0.32, 0.4, 0.52));
+    vec3 tip = tint < 0.34 ? vec3(0.78, 0.62, 0.86) : (tint < 0.67 ? vec3(0.9, 0.84, 0.66) : vec3(0.66, 0.8, 0.92));
+    return mix(base, tip, hn * hn);
+  }
+  if (kind < 2.5) {
+    return mix(vec3(0.46, 0.5, 0.3), vec3(0.6, 0.5, 0.34), tint) * (0.8 + 0.25 * smoothstep(0.5 * r, r, d));
+  }
+  vec3 stem = mix(vec3(0.5, 0.56, 0.34), vec3(0.55, 0.42, 0.36), tint);
+  vec3 tip = tint < 0.5 ? vec3(0.86, 0.66, 0.84) : vec3(0.78, 0.86, 0.62);
+  vec3 c = mix(stem, tip, smoothstep(0.45, 0.95, d / r));
+  return d < r * 0.2 ? vec3(0.66, 0.42, 0.26) : c;
+}
+
+// 海底のサンゴとイソギンチャク（p は海底の座標 m）。rgb は色、a は覆う割合、nrm は面の向き、ao は暗がり
 vec4 reefSample(vec2 p, float t, float aa, out vec3 nrm, out float ao) {
-  const float CELL = 1.7;
-  vec2 c0 = floor(p / CELL);
-  vec4 res = vec4(0.0);
+  vec2 c0 = floor(p / REEF_CELL);
   nrm = vec3(0.0, 0.0, 1.0);
   ao = 1.0;
+  float bestH = 0.0;
+  vec2 bestV = vec2(0.0);
+  vec2 bestId = vec2(0.0);
+  float bestKind = 0.0, bestR = 1.0, bestTint = 0.0;
   for (int j = -1; j <= 1; j++) {
     for (int i = -1; i <= 1; i++) {
       vec2 id = c0 + vec2(float(i), float(j));
-      float dens = smoothstep(0.32, 0.68, vnoise(id * 0.33 + 7.0));
-      vec2 h = hash22(id + 91.0);
-      if (h.x > 0.12 + 0.6 * dens) continue;
-      vec2 ctr = (id + 0.2 + 0.6 * hash22(id + 3.0)) * CELL;
-      float kind = floor(h.y * 4.0);
-      float r = mix(0.34, 0.72, hash12(id + 11.0)) * (kind > 2.5 ? 0.72 : 1.0);
+      vec2 ctr;
+      float kind, r, tint;
+      if (!reefItem(id, ctr, kind, r, tint)) continue;
       vec2 v = p - ctr;
       float d = length(v);
       if (d > r * 1.8) continue;
       ao = min(ao, mix(0.55, 1.0, smoothstep(r * 0.85, r * 1.7, d)));
       if (d > r * 1.15) continue;
-      float ang = atan(v.y, v.x);
-      float tint = hash12(id + 23.0);
-      vec3 col;
-      vec3 n;
-      float cov;
-      if (kind < 0.5) {
-        // ノウサンゴ：丸いドームに迷路のような溝
-        float s2 = clamp(d / r, 0.0, 1.0);
-        float hgt = sqrt(1.0 - s2 * s2);
-        n = normalize(vec3(v / r, max(hgt, 0.15)));
-        float m = sin(dot(v, vec2(0.8, 0.6)) * 46.0 + vnoise(v * 7.0 + id) * 9.0);
-        col = mix(vec3(0.85, 0.62, 0.3), vec3(0.62, 0.72, 0.36), tint) * (0.68 + 0.32 * smoothstep(-0.4, 0.6, m));
-        cov = 1.0 - smoothstep(r - aa, r + aa, d);
-      } else if (kind < 1.5) {
-        // 枝サンゴ：コブがぎっしり詰まった塊。コブごとに丸みの陰影、すき間は暗い
-        vec2 g = v / 0.085;
-        vec2 gi = floor(g);
-        float best = 9.0;
-        vec2 bv = vec2(0.0);
-        vec2 bid = vec2(0.0);
-        for (int bj = -1; bj <= 1; bj++) {
-          for (int bi = -1; bi <= 1; bi++) {
-            vec2 o = vec2(float(bi), float(bj));
-            vec2 cpt = o + 0.5 + (hash22(gi + o + id) - 0.5) * 0.6 - fract(g);
-            float dd = length(cpt);
-            if (dd < best) { best = dd; bv = cpt; bid = gi + o; }
-          }
-        }
-        float bump = 1.0 - smoothstep(0.35, 0.62, best);
-        float edge = r * (0.8 + 0.28 * vnoise(vec2(ang * 2.5, tint * 9.0)));
-        float hgt = sqrt(max(0.0, 1.0 - pow(best / 0.62, 2.0)));
-        vec3 base = tint < 0.33 ? vec3(1.0, 0.36, 0.55) : (tint < 0.66 ? vec3(0.78, 0.32, 0.88) : vec3(1.0, 0.56, 0.22));
-        base *= (0.85 + 0.25 * hash12(bid + 5.0)) * (0.85 + 0.3 * vnoise(v * 4.0 + id));
-        col = mix(base * 0.22, base * (0.55 + 0.35 * hgt), bump);
-        n = normalize(vec3(-bv * 0.8 * bump, max(hgt, 0.5)));
-        cov = 1.0 - smoothstep(edge - aa, edge + aa, d);
-      } else if (kind < 2.5) {
-        // テーブルサンゴ：平たい皿に放射状のすじ
-        float edge = r * (0.9 + 0.1 * sin(ang * 9.0 + tint * 6.0));
-        float rib = 0.85 + 0.15 * sin(ang * 70.0);
-        col = mix(vec3(0.62, 0.7, 0.36), vec3(0.85, 0.6, 0.4), tint) * rib * (0.85 + 0.25 * smoothstep(0.6 * r, edge, d));
-        n = normalize(vec3(v / r * 0.25, 1.0));
-        cov = 1.0 - smoothstep(edge - aa, edge + aa, d);
-      } else {
-        // イソギンチャク：長い触手と短い触手の 2 段がふさふさと揺れる。触手 1 本ずつに丸みの陰影、すき間は暗い
-        float sway = sin(t * 1.6 + d * 8.0 + tint * 20.0) * 0.2 * (d / r);
-        float a2 = ang + sway;
-        vec3 tcol = tint < 0.4 ? vec3(0.78, 0.2, 0.7) : (tint < 0.75 ? vec3(0.3, 0.75, 0.32) : vec3(0.92, 0.32, 0.45));
-        float lenA = r * (0.88 + 0.12 * sin(a2 * 5.0 + tint * 30.0));
-        float lenB = lenA * 0.72;
-        float csA = cos(a2 * 20.0);
-        float csB = cos(a2 * 20.0 + 3.14159);
-        float tA = smoothstep(-0.3, 0.25, csA) * (1.0 - smoothstep(lenA - aa, lenA + aa, d));
-        float tB = smoothstep(-0.3, 0.25, csB) * (1.0 - smoothstep(lenB - aa, lenB + aa, d));
-        float rA = sqrt(clamp((csA + 0.3) / 1.3, 0.0, 1.0));
-        float rB = sqrt(clamp((csB + 0.3) / 1.3, 0.0, 1.0));
-        float under = 1.0 - smoothstep(lenB * 0.95 - aa, lenB * 0.95 + aa, d);
-        float disk = 1.0 - smoothstep(r * 0.2 - aa, r * 0.2 + aa, d);
-        float tipA = smoothstep(lenA * 0.86, lenA, d);
-        vec3 cA = tcol * (0.3 + 0.75 * rA) * (1.0 + 0.5 * tipA);
-        vec3 cB = tcol * (0.3 + 0.75 * rB) * 0.9;
-        vec3 c = tcol * 0.18;
-        c = mix(c, cA, tA * (1.0 - tB));
-        c = mix(c, cB, tB);
-        float mouth = 1.0 - smoothstep(0.015, 0.04, d);
-        col = mix(c, mix(vec3(0.85, 0.48, 0.25), vec3(0.3, 0.08, 0.08), mouth), disk);
-        cov = max(max(disk, under), max(tA, tB));
-        vec2 side = vec2(-sin(a2), cos(a2)) * sin(a2 * 20.0) * 0.7;
-        n = normalize(vec3(v / r * 0.5 + side * (1.0 - disk), 1.0));
-      }
-      if (cov > res.a) {
-        res = vec4(col, cov);
-        nrm = n;
+      float hgt = reefHeight(kind, v, r, tint, id, t, aa);
+      if (hgt > bestH) {
+        bestH = hgt; bestV = v; bestId = id; bestKind = kind; bestR = r; bestTint = tint;
       }
     }
   }
-  return res;
+  if (bestH <= 0.0) return vec4(0.0);
+  // 高さの差から面の向き
+  const float E = 0.012;
+  float hx = reefHeight(bestKind, bestV + vec2(E, 0.0), bestR, bestTint, bestId, t, aa)
+           - reefHeight(bestKind, bestV - vec2(E, 0.0), bestR, bestTint, bestId, t, aa);
+  float hy = reefHeight(bestKind, bestV + vec2(0.0, E), bestR, bestTint, bestId, t, aa)
+           - reefHeight(bestKind, bestV - vec2(0.0, E), bestR, bestTint, bestId, t, aa);
+  nrm = normalize(vec3(-hx / (2.0 * E), -hy / (2.0 * E), 1.0));
+  float hn = clamp(bestH / (bestR * 0.5), 0.0, 1.0);
+  ao = mix(0.4, 1.0, hn);
+  float cov = clamp(bestH / (bestR * 0.03), 0.0, 1.0);
+  return vec4(reefColor(bestKind, bestV, bestR, bestTint, hn), cov);
 }
 
 // サンゴとイソギンチャクが砂地に落とす影（形は丸で近似）
 float reefShadow(vec2 p) {
-  const float CELL = 1.7;
-  vec2 c0 = floor(p / CELL);
+  vec2 c0 = floor(p / REEF_CELL);
   float sh = 0.0;
   for (int j = -1; j <= 1; j++) {
     for (int i = -1; i <= 1; i++) {
       vec2 id = c0 + vec2(float(i), float(j));
-      float dens = smoothstep(0.32, 0.68, vnoise(id * 0.33 + 7.0));
-      vec2 h = hash22(id + 91.0);
-      if (h.x > 0.12 + 0.6 * dens) continue;
-      vec2 ctr = (id + 0.2 + 0.6 * hash22(id + 3.0)) * CELL;
-      float kind = floor(h.y * 4.0);
-      float r = mix(0.34, 0.72, hash12(id + 11.0)) * (kind > 2.5 ? 0.72 : 1.0);
-      sh = max(sh, 1.0 - smoothstep(r * 0.6, r * 1.05, length(p - ctr)));
+      vec2 ctr;
+      float kind, r, tint;
+      if (!reefItem(id, ctr, kind, r, tint)) continue;
+      sh = max(sh, 1.0 - smoothstep(r * 0.55, r * 1.1, length(p - ctr)));
     }
   }
   return sh;
@@ -437,7 +452,7 @@ void main() {
   float deepK = smoothstep(2.0, 30.0, D);
   float cellM = mix(0.85, 1.6, deepK);
   vec3 pat = causticPattern(xf / cellM + vec2(0.0, 7.0), t * 0.7, mix(0.10, 0.30, deepK));
-  vec3 caust = vec3(0.85) + pat * mix(0.75, 0.2, deepK);
+  vec3 caust = vec3(0.88) + pat * mix(0.6, 0.18, deepK);
 
   float simBlur = exp(-0.5 * pow(D * 0.06, 2.0));
   vec3 kr = vec3(0.246, 0.250, 0.255) * D;
@@ -453,11 +468,11 @@ void main() {
 #if REEF
   vec3 reefN;
   float reefAo;
-  vec4 reef = reefSample(xf, t, 1.5 / uPxPerM, reefN, reefAo);
-  alb = mix(alb * reefAo, reef.rgb, reef.a);
-  float reefSh = reefShadow(xf + LsW.xy / LsW.z * 0.45) * (1.0 - reef.a) * 0.75;
+  vec4 reef = reefSample(xf, t, (1.5 + D * 6.0) / uPxPerM, reefN, reefAo);
+  float reefSh = reefShadow(xf + LsW.xy / LsW.z * 0.45) * (1.0 - reef.a) * 0.7;
+  alb = mix(alb, reef.rgb, reef.a) * reefAo;
   lam *= 1.0 - reefSh;
-  lam = mix(lam, 0.25 + 0.85 * max(dot(reefN, LsW), 0.0), reef.a);
+  lam = mix(lam, (0.12 + 0.95 * max(dot(reefN, LsW), 0.0)) * mix(0.75, 1.0, reefAo), reef.a);
 #else
   vec4 reef = vec4(0.0);
 #endif
@@ -551,7 +566,7 @@ void main() {
 
   col = aces(col * 0.9);
   float luma = dot(col, vec3(0.2126, 0.7152, 0.0722));
-  col = max(mix(vec3(luma), col, 1.35), 0.0);
+  col = max(mix(vec3(luma), col, 1.15), 0.0);
   vec2 c = vUv - 0.5;
   col *= 1.0 - dot(c, c) * 0.55;
   col = pow(col, vec3(1.0 / 2.2));
