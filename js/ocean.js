@@ -228,8 +228,6 @@ vec4 fishSample(vec2 q, float tail, float kind, float aa, vec3 L) {
   float pect = 1.0 - smoothstep(-aa, aa, (length(pf / vec2(0.12, 0.05)) - 1.0) * 0.05);
   float pectRay = 0.8 + 0.2 * cos(atan(pf.y, pf.x + 0.12) * 28.0);
 
-  // 目
-  float eye = 1.0 - smoothstep(-aa, aa, length(vec2(b.x - 0.33, abs(b.y) - 0.115)) - 0.017);
 
   // 厚み：断面を楕円とみなした胴の高さから法線を出し、水中の太陽で照らす
   float h = sqrt(max(w * w - b.y * b.y, 1e-5));
@@ -274,7 +272,6 @@ vec4 fishSample(vec2 q, float tail, float kind, float aa, vec3 L) {
   vec4 col = vec4(cTail * mix(1.0, tailRay, isFish) * (0.75 + 0.25 * wrap), fin * 0.85);
   col = over(vec4(cFin * mix(1.0, pectRay, isFish) * 0.95, pect * 0.7), col);
   col = over(vec4(cBody * shade + gloss * isFish, body), col);
-  col = over(vec4(cBody * shade * 0.3, eye * body * isFish * 0.75), col);
   return col;
 }
 
