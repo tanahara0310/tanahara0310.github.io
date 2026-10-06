@@ -187,30 +187,85 @@ float panelShadow(vec2 p, float blur) {
   return s;
 }
 
-// 魚の形（体長 1・頭が +x）。胴は尾へ向かってしなり、尾びれは三角
-float fishShape(vec2 q, float tail) {
-  q.y += sin(tail - q.x * 5.0) * 0.07 * smoothstep(0.35, -0.6, q.x);
-  float body = (length(q * vec2(1.0, 1.85)) - 0.5) / 1.6;
-  vec2 tq = q - vec2(-0.47, 0.0);
-  float fin = max(max(abs(tq.y) + tq.x * 1.25 - 0.03, tq.x), -0.26 - tq.x);
-  return min(body, fin);
+// 重ねる（上の色を下の色の上に）
+vec4 over(vec4 top, vec4 bot) {
+  float a = top.a + bot.a * (1.0 - top.a);
+  vec3 c = (top.rgb * top.a + bot.rgb * bot.a * (1.0 - top.a)) / max(a, 1e-4);
+  return vec4(c, a);
 }
 
-// 種類ごとの色。0 黄、1 青に黄色の尾、2 オレンジに白い縞、3 大きな魚影
-vec3 fishAlbedo(float kind, vec2 q) {
-  vec3 a;
+// 上から見た魚（体長 1・鼻先が +0.5・尾びれの先が -0.74）。rgb は色、a は覆う割合
+// kind: 0 黄色い魚、1 青い体に黄色の尾、2 クマノミ、3 大きな魚影
+vec4 fishSample(vec2 q, float tail, float kind, float aa) {
+  if (q.x > 0.56 + aa || q.x < -0.8 - aa || abs(q.y) > 0.42 + aa) return vec4(0.0);
+
+  // 体のうねり：頭はほとんど動かず、尾に向かって大きく振れる
+  float back = clamp(0.5 - q.x, 0.0, 1.3);
+  vec2 b = vec2(q.x, q.y - sin(tail - q.x * 6.0) * 0.085 * back * back);
+
+  // 胴：丸い頭、太い胸、細い尾の付け根
+  float wHead = 0.19 * sqrt(max(0.0, 1.0 - pow((b.x - 0.08) / 0.42, 2.0)));
+  float wTail = 0.035 + 0.155 * pow(smoothstep(-0.44, 0.08, b.x), 0.6);
+  float w = b.x > 0.08 ? wHead : wTail;
+  float body = (1.0 - smoothstep(-aa, aa, abs(b.y) - w)) * smoothstep(-0.44 - aa, -0.44 + aa, b.x);
+
+  // 尾びれ：根元から広がり、先が二股に割れる
+  float st = clamp((-0.42 - b.x) / 0.32, 0.0, 1.0);
+  float wt = 0.03 + 0.19 * st;
+  float notch = 0.12 * smoothstep(0.45, 1.0, st);
+  float fin = (1.0 - smoothstep(-aa, aa, abs(b.y) - wt)) * smoothstep(-aa, aa, abs(b.y) - notch)
+            * step(b.x, -0.42) * smoothstep(-0.74 - aa, -0.74 + aa, b.x);
+
+  // 胸びれ：左右に張り出してはばたく
+  float side = sign(b.y + 1e-5);
+  float flap = 0.75 + sin(tail * 1.4) * 0.35;
+  vec2 pf = b - vec2(0.18, side * 0.19);
+  float ca = cos(flap), sa = sin(flap) * side;
+  pf = vec2(ca * pf.x + sa * pf.y, -sa * pf.x + ca * pf.y);
+  float pect = 1.0 - smoothstep(-aa, aa, (length(pf / vec2(0.12, 0.05)) - 1.0) * 0.05);
+
+  // 目
+  float eye = 1.0 - smoothstep(-aa, aa, length(vec2(b.x - 0.34, abs(b.y) - 0.1)) - 0.034);
+
+  // 丸み：背中の中央を明るく、縁を暗く
+  float n = clamp(abs(b.y) / max(w, 1e-3), 0.0, 1.0);
+  float shade = 0.62 + 0.5 * sqrt(1.0 - n * n);
+
+  vec3 cBody, cFin, cTail;
   if (kind < 0.5) {
-    a = vec3(0.95, 0.78, 0.08);
+    cBody = vec3(1.0, 0.80, 0.04);
+    cFin = vec3(1.0, 0.88, 0.25);
+    cTail = cBody;
   } else if (kind < 1.5) {
-    a = q.x < -0.42 ? vec3(0.95, 0.80, 0.10) : vec3(0.05, 0.24, 0.85);
+    cBody = vec3(0.07, 0.27, 0.92);
+    float stripe = (1.0 - smoothstep(0.045, 0.075, abs(b.y))) * smoothstep(-0.36, -0.2, b.x) * smoothstep(0.38, 0.22, b.x);
+    cBody = mix(cBody, vec3(0.02, 0.04, 0.16), stripe);
+    cFin = vec3(0.25, 0.45, 1.0);
+    cTail = vec3(1.0, 0.82, 0.05);
   } else if (kind < 2.5) {
-    float st = max(max(1.0 - smoothstep(0.03, 0.06, abs(q.x - 0.22)), 1.0 - smoothstep(0.03, 0.06, abs(q.x + 0.08))),
-                   1.0 - smoothstep(0.02, 0.05, abs(q.x + 0.34)));
-    a = mix(vec3(0.95, 0.36, 0.04), vec3(0.95), st);
+    cBody = vec3(1.0, 0.40, 0.03);
+    float bands = 0.0;
+    float rims = 0.0;
+    for (int k = 0; k < 3; k++) {
+      float bx = 0.27 - float(k) * 0.29;
+      float dd = abs(b.x - bx);
+      bands = max(bands, 1.0 - smoothstep(0.035, 0.045, dd));
+      rims = max(rims, smoothstep(0.035, 0.045, dd) * (1.0 - smoothstep(0.055, 0.065, dd)));
+    }
+    cBody = mix(mix(cBody, vec3(0.03), rims), vec3(0.97), bands);
+    cFin = vec3(1.0, 0.5, 0.1);
+    cTail = vec3(1.0, 0.45, 0.06);
   } else {
-    a = vec3(0.025, 0.04, 0.05);
+    cBody = vec3(0.03, 0.04, 0.05);
+    cFin = cBody;
+    cTail = cBody;
   }
-  return a * mix(0.7, 1.0, smoothstep(0.0, 0.16, abs(q.y)));
+
+  vec4 col = vec4(cTail, fin * 0.9);
+  col = over(vec4(cFin, pect * 0.75), col);
+  col = over(vec4(cBody * shade, body), col);
+  col = over(vec4(vec3(0.02), eye * body * step(kind, 2.5)), col);
+  return col;
 }
 
 vec3 aces(vec3 x) {
@@ -288,12 +343,12 @@ void main() {
     vec4 B = uFishB[i];
     float df = min(B.y, D * 0.85);
     vec2 ps = sp + toSun * ((D - df) / max(D, 0.01)) - A.xy;
-    float reach = A.w * 0.7 + 6.0 + (D - df) * 9.0;
+    float reach = A.w * 0.85 + 6.0 + (D - df) * 9.0;
     if (dot(ps, ps) > reach * reach) continue;
     vec2 dir = vec2(cos(A.z), sin(A.z));
     vec2 q = vec2(dot(ps, dir), dot(ps, vec2(-dir.y, dir.x))) / A.w;
     float blur = (2.0 + (D - df) * 9.0) / A.w;
-    shadow = max(shadow, (1.0 - smoothstep(-blur, blur, fishShape(q, B.z))) * B.w * 0.6);
+    shadow = max(shadow, fishSample(q, B.z, 3.0, blur).a * B.w * 0.6);
   }
   shadow *= 1.0 - smoothstep(3.0, 16.0, D);
   vec3 Ef = Esun * cosS * Tdown * caust * lam * (1.0 - shadow) + Esky * Tup * 0.55 * (1.0 - shadow * 0.35);
@@ -309,17 +364,18 @@ void main() {
     vec4 B = uFishB[i];
     float df = min(B.y, D * 0.85);
     vec2 pv = sp + off * uPxPerM * (df / max(D, 0.01)) - A.xy;
-    float reach = A.w * 0.7 + 6.0 + df * 3.0;
+    float reach = A.w * 0.85 + 6.0 + df * 3.0;
     if (dot(pv, pv) > reach * reach) continue;
     vec2 dir = vec2(cos(A.z), sin(A.z));
     vec2 q = vec2(dot(pv, dir), dot(pv, vec2(-dir.y, dir.x))) / A.w;
-    float aa = (1.2 + df * 2.5) / A.w;
-    float cov = (1.0 - smoothstep(-aa, aa, fishShape(q, B.z))) * B.w;
+    float aa = (1.0 + df * 2.5) / A.w;
+    vec4 fs = fishSample(q, B.z, B.x, aa);
+    float cov = fs.a * B.w;
     if (cov <= 0.0) continue;
     vec3 Tf = exp(-sigT * df);
     vec3 Ef2 = Esun * cosS * exp(-sigT * df / cosS) * mix(vec3(1.0), caust, 0.6) + Esky * Tf * 0.55;
     vec3 Lin2 = sigS * (Esun + Esky) / (4.0 * PI) * (1.0 - exp(-kk * df)) / kk * 3.2;
-    vec3 Lfish = fishAlbedo(B.x, q) / PI * Ef2 * Tf + Lin2;
+    vec3 Lfish = fs.rgb * 0.8 / PI * Ef2 * Tf + Lin2;
     Lsub = mix(Lsub, Lfish, cov);
   }
 
@@ -551,7 +607,7 @@ export function createOcean(canvas, opts) {
         fish.push({
           school, kind,
           x: cx + (frand() - 0.5) * 170, y: cy + (frand() - 0.5) * 120, h: school.h,
-          lenM: (kind === 2 ? 0.22 : 0.27) * (0.85 + frand() * 0.35),
+          lenM: (kind === 2 ? 0.27 : 0.33) * (0.85 + frand() * 0.3),
           depthFrac: 0.35 + frand() * 0.45, depthMax: 3.2,
           base: 0.28 + frand() * 0.12, phase: frand() * 6, jitter: frand() * 6.28,
           flee: 0, fx: 0, fy: 0,
