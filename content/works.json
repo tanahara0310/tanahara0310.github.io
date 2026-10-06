@@ -3,7 +3,7 @@
     {
       "slug": "koaengine",
       "kind": "main",
-      "title": "koaEngine（自作エンジン）",
+      "title": "CoreEngine（自作エンジン）",
       "meta": "就活作品 ・ 1人 ・ 約1年半",
       "summary": "沖縄の海を自作ゲームエンジンで。PBR・FFT 海面・物理ベースの水の色・DXR の屈折・大気散乱・ボリュメトリック雲",
       "thumb": {
