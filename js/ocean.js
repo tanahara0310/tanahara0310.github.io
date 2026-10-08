@@ -765,7 +765,13 @@ export function createOcean(canvas, opts) {
     return Math.min(190, Math.max(72, viewW / 10));
   }
 
-  function resize() {
+  // canvas は大きさを変えると中身が消えるので、変えるのは次のフレームの描き始め（描く直前）だけにする
+  let resizeWanted = false;
+  function requestResize() {
+    resizeWanted = true;
+  }
+
+  function applyResize() {
     const w = canvas.clientWidth || window.innerWidth;
     const h = canvas.clientHeight || window.innerHeight;
     if (w < 2 || h < 2) {
@@ -787,7 +793,7 @@ export function createOcean(canvas, opts) {
     return true;
   }
 
-  if (!buildSim(4, 4) || !resize()) return null;
+  if (!buildSim(4, 4) || !applyResize()) return null;
 
   const drops = [];
   let lastScroll = opts.getScroll();
@@ -934,7 +940,10 @@ export function createOcean(canvas, opts) {
     raf = requestAnimationFrame(frame);
     const dtMs = Math.min(100, now - last);
     last = now;
-    if (!viewW && (!resize() || !viewW)) return;
+    if (resizeWanted || !viewW) {
+      resizeWanted = false;
+      if (!applyResize() || !viewW) return;
+    }
     const dt = dtMs / 1000;
     if (!opts.reducedMotion) time += dt * 0.55;
 
@@ -1016,7 +1025,7 @@ export function createOcean(canvas, opts) {
         lastAvg = avg;
         if (avg > 22 && quality > 0.45) {
           quality *= 0.8;
-          resize();
+          requestResize();
           if (quality <= 0.45) document.documentElement.classList.add('low-fx');
         } else if (avg > 28 && quality <= 0.45) {
           lighten();
@@ -1059,7 +1068,7 @@ export function createOcean(canvas, opts) {
     },
     setDepth(m) { depthTarget = m; },
     setLight(l) { lightTarget = l; },
-    resize,
+    resize: requestResize,
     get format() { return fmt && (fmt[1] === gl.FLOAT ? 'RGBA32F' : 'RGBA16F'); },
     /** 調べるための状態 */
     status() {
