@@ -618,9 +618,33 @@ function program(gl, fs) {
   gl.attachShader(p, compile(gl, gl.FRAGMENT_SHADER, fs));
   gl.bindAttribLocation(p, 0, 'aPos');
   gl.linkProgram(p);
+  return finishProgram(gl, { p });
+}
+
+// 組み立てを始めるだけで、終わるのを待たない（KHR_parallel_shader_compile があれば裏で進む）
+function startProgram(gl, fs) {
+  const p = gl.createProgram();
+  const v = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(v, VS);
+  gl.compileShader(v);
+  const f = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(f, fs);
+  gl.compileShader(f);
+  gl.attachShader(p, v);
+  gl.attachShader(p, f);
+  gl.bindAttribLocation(p, 0, 'aPos');
+  gl.linkProgram(p);
+  return { p, v, f };
+}
+
+function finishProgram(gl, { p, v, f }) {
   if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
-    throw new Error(gl.getProgramInfoLog(p));
+    const log = (f && gl.getShaderInfoLog(f)) || (v && gl.getShaderInfoLog(v)) || gl.getProgramInfoLog(p);
+    gl.deleteProgram(p);
+    throw new Error(log);
   }
+  if (v) gl.deleteShader(v);
+  if (f) gl.deleteShader(f);
   const loc = {};
   const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
   for (let i = 0; i < n; i++) {
@@ -655,8 +679,7 @@ export function createOcean(canvas, opts) {
     return null;
   }
 
-  let sim, drop, render;
-  let level = 0;
+  let sim, drop;
   const errors = [];
   try {
     sim = program(gl, SIM_FS);
@@ -666,34 +689,67 @@ export function createOcean(canvas, opts) {
     console.warn('[ocean]', e);
     return null;
   }
-  for (; level < LEVELS.length; level++) {
-    try {
-      render = program(gl, renderSource(LEVELS[level]));
-      break;
-    } catch (e) {
-      errors.push(`${LEVELS[level].name}: ${e.message || e}`);
-      console.warn('[ocean]', LEVELS[level].name, e);
+
+  // 描画のシェーダーは組み立てに数秒かかることがあるので、裏で組み立てる。
+  // 終わるまでは軽い段階で描き、目当ての段階ができたら差し替える
+  const parallel = gl.getExtension('KHR_parallel_shader_compile');
+  let render = null;
+  let level = -1;
+  let want = 0;
+  let swapped = false;
+  const building = [];
+
+  function build(i) {
+    if (i >= LEVELS.length || i === level || building.some((b) => b.level === i)) return;
+    building.push({ level: i, h: startProgram(gl, renderSource(LEVELS[i])) });
+  }
+
+  function pollBuild() {
+    for (let k = building.length - 1; k >= 0; k--) {
+      const b = building[k];
+      if (parallel && !gl.getProgramParameter(b.h.p, parallel.COMPLETION_STATUS_KHR)) continue;
+      building.splice(k, 1);
+      let prog;
+      try {
+        prog = finishProgram(gl, b.h);
+      } catch (e) {
+        errors.push(`${LEVELS[b.level].name}: ${e.message || e}`);
+        console.warn('[ocean]', LEVELS[b.level].name, e);
+        if (b.level === want) {
+          want = b.level + 1;
+          build(want);
+        }
+        continue;
+      }
+      if (!render || Math.abs(b.level - want) < Math.abs(level - want)) {
+        if (render) gl.deleteProgram(render.p);
+        render = prog;
+        level = b.level;
+        swapped = true;
+      } else {
+        gl.deleteProgram(prog.p);
+      }
     }
   }
-  if (!render) {
-    oceanError = errors.join(' / ');
-    return null;
+
+  build(0);
+  if (parallel) {
+    build(LEVELS.length - 1);
+  } else {
+    while (!render && building.length) pollBuild();
+    if (!render) {
+      oceanError = errors.join(' / ');
+      return null;
+    }
   }
 
   // 一段軽い描画へ切り替える
   function lighten() {
-    for (let next = level + 1; next < LEVELS.length; next++) {
-      try {
-        const p = program(gl, renderSource(LEVELS[next]));
-        gl.deleteProgram(render.p);
-        render = p;
-        level = next;
-        return true;
-      } catch (e) {
-        errors.push(`${LEVELS[next].name}: ${e.message || e}`);
-      }
-    }
-    return false;
+    if (want >= LEVELS.length - 1) return false;
+    want++;
+    build(want);
+    if (!parallel) pollBuild();
+    return true;
   }
 
   const vao = gl.createVertexArray();
@@ -922,13 +978,14 @@ export function createOcean(canvas, opts) {
   // 画質の自動調整。GPU の実測時間（測れないときはフレームの間隔）で、重ければ描画解像度を下げ、軽ければ戻す
   const timer = gl.getExtension('EXT_disjoint_timer_query_webgl2');
   const GPU_HIGH = 10;
-  const GPU_LOW = 5.5;
+  const GPU_LOW = 5;
   const GPU_AIM = 8;
   const Q_MIN = 0.5;
   const queries = [];
   let gpuAcc = 0, gpuN = 0, gpuMs = 0;
   let ivAcc = 0, ivN = 0, ivMin = Infinity, ivAvg = 0;
   let lastTune = performance.now();
+  let highStreak = 0, lowStreak = 0;
   let frameNo = 0;
 
   function pollTimer() {
@@ -969,9 +1026,14 @@ export function createOcean(canvas, opts) {
     if (timer) {
       gpuMs = gpuAcc / gpuN;
       gpuAcc = 0; gpuN = 0;
-      if (gpuMs > GPU_HIGH || (gpuMs < GPU_LOW && quality < 1)) {
+      // ほかのアプリと GPU を取り合うと測った値が揺れるので、続いたときだけ変える（下げるのは 2 回、上げるのは 3 回）
+      highStreak = gpuMs > GPU_HIGH ? highStreak + 1 : 0;
+      lowStreak = gpuMs < GPU_LOW && quality < 1 ? lowStreak + 1 : 0;
+      if (highStreak >= 2 || gpuMs > GPU_HIGH * 1.6 || lowStreak >= 3) {
+        highStreak = 0;
+        lowStreak = 0;
         // 描く画素の数は quality の 2 乗に比例する
-        const changed = setQuality(quality * Math.min(1.25, Math.sqrt(GPU_AIM / gpuMs)));
+        const changed = setQuality(quality * Math.min(1.15, Math.sqrt(GPU_AIM / gpuMs)));
         if (!changed && quality <= Q_MIN && gpuMs > GPU_HIGH * 1.6) lighten();
       }
       return;
@@ -1003,6 +1065,20 @@ export function createOcean(canvas, opts) {
     raf = requestAnimationFrame(frame);
     const dtMs = Math.min(100, now - last);
     last = now;
+    if (building.length) pollBuild();
+    if (!render) {
+      if (!building.length) giveUp();
+      return;
+    }
+    if (swapped) {
+      swapped = false;
+      gpuAcc = 0;
+      gpuN = 0;
+      highStreak = 0;
+      lowStreak = 0;
+      lastTune = now;
+      document.documentElement.classList.remove('ocean-wait');
+    }
     if (resizeWanted || !viewW) {
       resizeWanted = false;
       if (!applyResize() || !viewW) return;
@@ -1087,6 +1163,18 @@ export function createOcean(canvas, opts) {
     tune(now, dtMs);
   }
 
+  // どの段階も組み立てられなかった
+  function giveUp() {
+    oceanError = errors.join(' / ') || '描画のシェーダーを組み立てられない';
+    alive = false;
+    cancelAnimationFrame(raf);
+    document.documentElement.classList.remove('ocean-wait');
+    document.documentElement.classList.add('no-webgl');
+  }
+
+  // 描けるようになるまでは canvas を隠し、CSS の海を見せる
+  if (!render) document.documentElement.classList.add('ocean-wait');
+
   canvas.addEventListener('webglcontextlost', (e) => {
     e.preventDefault();
     alive = false;
@@ -1127,7 +1215,7 @@ export function createOcean(canvas, opts) {
     status() {
       const dbg = gl.getExtension('WEBGL_debug_renderer_info');
       return {
-        level: LEVELS[level].name,
+        level: (level >= 0 ? LEVELS[level].name : '組み立て中') + (building.length ? `（組み立て中: ${building.map((b) => LEVELS[b.level].name).join(', ')}）` : ''),
         gpu: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
         canvas: `${canvas.width}x${canvas.height}`,
         quality: quality.toFixed(2),

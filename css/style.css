@@ -73,6 +73,9 @@ h1, h2, h3, h4 { margin: 0; font-weight: 800; color: var(--ink); line-height: 1.
 }
 .no-webgl #ocean { display: none; }
 .no-webgl .sea-fallback { display: block; }
+/* 背景の海のシェーダーを組み立てている間は CSS の海を見せる */
+.ocean-wait #ocean { opacity: 0; }
+.ocean-wait .sea-fallback { display: block; }
 
 main,
 .foot { position: relative; z-index: 1; }
