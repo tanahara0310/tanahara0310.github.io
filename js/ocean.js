@@ -62,6 +62,7 @@ in vec2 vUv;
 out vec4 outColor;
 
 uniform sampler2D uSim;
+uniform sampler2D uNoise;
 uniform vec2 uSimTexel;
 uniform vec2 uView;
 uniform float uPxScale;
@@ -83,22 +84,15 @@ uniform vec2 uWaveB[${NW}];
 const float PI = 3.14159265;
 const float PARALLAX = 0.55;
 
-uvec2 pcg2d(uvec2 v) {
-  v = v * 1664525u + 1013904223u;
-  v.x += v.y * 1664525u; v.y += v.x * 1664525u;
-  v ^= v >> 16u;
-  v.x += v.y * 1664525u; v.y += v.x * 1664525u;
-  v ^= v >> 16u;
-  return v;
-}
-vec2 hash22(vec2 p) { return vec2(pcg2d(uvec2(ivec2(floor(p)) + 65536))) * (1.0 / 4294967295.0); }
-float hash12(vec2 p) { return hash22(p).x; }
+// 乱数は前もって作った 256×256 の画像から読む（マスごとに 1 回読むだけで済む）
+vec2 hash22(vec2 p) { return texelFetch(uNoise, ivec2(floor(p)) & 255, 0).xy; }
+float hash12(vec2 p) { return texelFetch(uNoise, ivec2(floor(p)) & 255, 0).x; }
 
+// なめらかな乱数。隣り合う 4 マスの補間は画像の線形補間に任せる
 float vnoise(vec2 p) {
   vec2 i = floor(p), f = fract(p);
   vec2 u = f * f * (3.0 - 2.0 * f);
-  return mix(mix(hash12(i), hash12(i + vec2(1, 0)), u.x),
-             mix(hash12(i + vec2(0, 1)), hash12(i + vec2(1, 1)), u.x), u.y);
+  return texture(uNoise, (mod(i, 256.0) + 0.5 + u) / 256.0).x;
 }
 float fbm(vec2 p) {
   float a = 0.5, s = 0.0;
@@ -242,11 +236,13 @@ vec3 reefColor(float kind, vec2 v, float r, float tint, float hn) {
   return d < r * 0.2 ? vec3(0.66, 0.42, 0.26) : c;
 }
 
-// 海底のサンゴとイソギンチャク（p は海底の座標 m）。rgb は色、a は覆う割合、nrm は面の向き、ao は暗がり
-vec4 reefSample(vec2 p, float t, float aa, out vec3 nrm, out float ao) {
+// 海底のサンゴとイソギンチャク（p は海底の座標 m）。rgb は色、a は覆う割合、nrm は面の向き、ao は暗がり。
+// sh は p + so の砂地に落ちる影（形は丸で近似。影は 1 マスより短いので、同じ 3×3 のマスで足りる）
+vec4 reefSample(vec2 p, vec2 so, float t, float aa, out vec3 nrm, out float ao, out float sh) {
   vec2 c0 = floor(p / REEF_CELL);
   nrm = vec3(0.0, 0.0, 1.0);
   ao = 1.0;
+  sh = 0.0;
   float bestH = 0.0;
   vec2 bestV = vec2(0.0);
   vec2 bestId = vec2(0.0);
@@ -258,6 +254,7 @@ vec4 reefSample(vec2 p, float t, float aa, out vec3 nrm, out float ao) {
       float kind, r, tint;
       if (!reefItem(id, ctr, kind, r, tint)) continue;
       vec2 v = p - ctr;
+      sh = max(sh, 1.0 - smoothstep(r * 0.55, r * 1.1, length(v + so)));
       float d = length(v);
       if (d > r * 1.8) continue;
       ao = min(ao, mix(0.55, 1.0, smoothstep(r * 0.85, r * 1.7, d)));
@@ -271,32 +268,15 @@ vec4 reefSample(vec2 p, float t, float aa, out vec3 nrm, out float ao) {
   if (bestH <= 0.0) return vec4(0.0);
   // 高さの差から面の向き
   const float E = 0.012;
-  float hx = reefHeight(bestKind, bestV + vec2(E, 0.0), bestR, bestTint, bestId, t, aa)
-           - reefHeight(bestKind, bestV - vec2(E, 0.0), bestR, bestTint, bestId, t, aa);
-  float hy = reefHeight(bestKind, bestV + vec2(0.0, E), bestR, bestTint, bestId, t, aa)
-           - reefHeight(bestKind, bestV - vec2(0.0, E), bestR, bestTint, bestId, t, aa);
-  nrm = normalize(vec3(-hx / (2.0 * E), -hy / (2.0 * E), 1.0));
+  float hx = reefHeight(bestKind, bestV + vec2(E, 0.0), bestR, bestTint, bestId, t, aa) - bestH;
+  float hy = reefHeight(bestKind, bestV + vec2(0.0, E), bestR, bestTint, bestId, t, aa) - bestH;
+  nrm = normalize(vec3(-hx / E, -hy / E, 1.0));
   float hn = clamp(bestH / (bestR * 0.5), 0.0, 1.0);
   ao = mix(0.4, 1.0, hn);
   float cov = clamp(bestH / (bestR * 0.03), 0.0, 1.0);
   return vec4(reefColor(bestKind, bestV, bestR, bestTint, hn), cov);
 }
 
-// サンゴとイソギンチャクが砂地に落とす影（形は丸で近似）
-float reefShadow(vec2 p) {
-  vec2 c0 = floor(p / REEF_CELL);
-  float sh = 0.0;
-  for (int j = -1; j <= 1; j++) {
-    for (int i = -1; i <= 1; i++) {
-      vec2 id = c0 + vec2(float(i), float(j));
-      vec2 ctr;
-      float kind, r, tint;
-      if (!reefItem(id, ctr, kind, r, tint)) continue;
-      sh = max(sh, 1.0 - smoothstep(r * 0.55, r * 1.1, length(p - ctr)));
-    }
-  }
-  return sh;
-}
 #endif
 
 // 砂紋の法線
@@ -468,8 +448,9 @@ void main() {
 #if REEF
   vec3 reefN;
   float reefAo;
-  vec4 reef = reefSample(xf, t, (1.5 + D * 6.0) / uPxPerM, reefN, reefAo);
-  float reefSh = reefShadow(xf + LsW.xy / LsW.z * 0.45) * (1.0 - reef.a) * 0.7;
+  float reefSh;
+  vec4 reef = reefSample(xf, LsW.xy / LsW.z * 0.45, t, (1.5 + D * 6.0) / uPxPerM, reefN, reefAo, reefSh);
+  reefSh *= (1.0 - reef.a) * 0.7;
   alb = mix(alb, reef.rgb, reef.a) * reefAo;
   lam *= 1.0 - reefSh;
   lam = mix(lam, (0.12 + 0.95 * max(dot(reefN, LsW), 0.0)) * mix(0.75, 1.0, reefAo), reef.a);
@@ -552,7 +533,7 @@ void main() {
 
   // 浮遊物（深いところだけ）
   float snow = 0.0;
-  for (int i = 0; i < 3; i++) {
+  if (D > 7.0) for (int i = 0; i < 3; i++) {
     float fi = float(i);
     float sc = 46.0 + fi * 26.0;
     vec2 q = (sp + vec2(sin(t * 0.13 + fi * 2.0) * 18.0, uScroll * (0.62 + 0.1 * fi) - t * (5.0 + fi * 3.0))) / sc;
@@ -851,6 +832,20 @@ export function createOcean(canvas, opts) {
 
   if (!buildSim(4, 4) || !applyResize()) return null;
 
+  // 描画のシェーダーが使う乱数の画像（どの端末でも同じ模様になるように種を決めて作る）
+  const noiseTex = gl.createTexture();
+  {
+    const nr = mulberry32(20261008);
+    const bytes = new Uint8Array(256 * 256 * 4);
+    for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(nr() * 256);
+    gl.bindTexture(gl.TEXTURE_2D, noiseTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 256, 256, 0, gl.RGBA, gl.UNSIGNED_BYTE, bytes);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  }
+
   const drops = [];
   let lastScroll = opts.getScroll();
 
@@ -1077,7 +1072,7 @@ export function createOcean(canvas, opts) {
       highStreak = 0;
       lowStreak = 0;
       lastTune = now;
-      document.documentElement.classList.remove('ocean-wait');
+      document.documentElement.classList.add('ocean-on');
     }
     if (resizeWanted || !viewW) {
       resizeWanted = false;
@@ -1132,6 +1127,10 @@ export function createOcean(canvas, opts) {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, targets[cur].tex);
     gl.uniform1i(L.uSim, 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, noiseTex);
+    gl.uniform1i(L.uNoise, 1);
+    gl.activeTexture(gl.TEXTURE0);
     gl.uniform2f(L.uSimTexel, 1 / simW, 1 / simH);
     gl.uniform2f(L.uView, viewW, viewH);
     gl.uniform1f(L.uPxScale, canvas.width / viewW);
@@ -1168,12 +1167,8 @@ export function createOcean(canvas, opts) {
     oceanError = errors.join(' / ') || '描画のシェーダーを組み立てられない';
     alive = false;
     cancelAnimationFrame(raf);
-    document.documentElement.classList.remove('ocean-wait');
     document.documentElement.classList.add('no-webgl');
   }
-
-  // 描けるようになるまでは canvas を隠し、CSS の海を見せる
-  if (!render) document.documentElement.classList.add('ocean-wait');
 
   canvas.addEventListener('webglcontextlost', (e) => {
     e.preventDefault();

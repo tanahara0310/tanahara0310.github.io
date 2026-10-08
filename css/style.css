@@ -62,20 +62,22 @@ h1, h2, h3, h4 { margin: 0; font-weight: 800; color: var(--ink); line-height: 1.
   z-index: 0;
   touch-action: pan-y;
 }
+/* 背景の海が描けるまでは、その深さの海の色を一面に出しておく */
 .sea-fallback {
-  display: none;
   position: fixed;
   inset: 0;
   z-index: 0;
+  background: var(--sea-tint, #2fb2b0);
+}
+html:not(.ocean-on) #ocean { opacity: 0; }
+.ocean-on .sea-fallback { display: none; }
+.no-webgl #ocean { display: none; }
+.no-webgl .sea-fallback {
+  display: block;
   background:
     radial-gradient(ellipse at 30% 0%, rgba(150, 240, 230, 0.45), transparent 60%),
     linear-gradient(180deg, #23c3c3 0%, #138fb0 35%, #0b5a8a 70%, #062b4f 100%);
 }
-.no-webgl #ocean { display: none; }
-.no-webgl .sea-fallback { display: block; }
-/* 背景の海のシェーダーを組み立てている間は CSS の海を見せる */
-.ocean-wait #ocean { opacity: 0; }
-.ocean-wait .sea-fallback { display: block; }
 
 main,
 .foot { position: relative; z-index: 1; }
