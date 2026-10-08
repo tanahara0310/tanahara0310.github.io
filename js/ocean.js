@@ -915,11 +915,74 @@ export function createOcean(canvas, opts) {
   let depth = opts.depth ?? 1.2, depthTarget = depth;
   let light = opts.light ?? 1, lightTarget = light;
   let last = performance.now();
-  let frameAcc = 0, frameCount = 0;
-  let lastAvg = 0;
   let lost = false;
   let raf = 0;
   let alive = true;
+
+  // 画質の自動調整。GPU の実測時間（測れないときはフレームの間隔）で、重ければ描画解像度を下げ、軽ければ戻す
+  const timer = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+  const GPU_HIGH = 10;
+  const GPU_LOW = 5.5;
+  const GPU_AIM = 8;
+  const Q_MIN = 0.5;
+  const queries = [];
+  let gpuAcc = 0, gpuN = 0, gpuMs = 0;
+  let ivAcc = 0, ivN = 0, ivMin = Infinity, ivAvg = 0;
+  let lastTune = performance.now();
+  let frameNo = 0;
+
+  function pollTimer() {
+    if (!timer) return;
+    if (gl.getParameter(timer.GPU_DISJOINT_EXT)) {
+      queries.forEach((q) => gl.deleteQuery(q));
+      queries.length = 0;
+      return;
+    }
+    while (queries.length && gl.getQueryParameter(queries[0], gl.QUERY_RESULT_AVAILABLE)) {
+      const q = queries.shift();
+      gpuAcc += gl.getQueryParameter(q, gl.QUERY_RESULT) / 1e6;
+      gpuN++;
+      gl.deleteQuery(q);
+    }
+  }
+
+  function setQuality(q) {
+    const next = Math.min(1, Math.max(Q_MIN, q));
+    if (Math.abs(next - quality) / quality < 0.06) return false;
+    quality = next;
+    requestResize();
+    return true;
+  }
+
+  function tune(now, dtMs) {
+    pollTimer();
+    if (dtMs < 100) {
+      ivAcc += dtMs;
+      ivN++;
+      ivMin = Math.min(ivMin, dtMs);
+    }
+    if (now - lastTune < 2500 || (timer ? gpuN < 20 : ivN < 60)) return;
+    lastTune = now;
+    ivAvg = ivAcc / ivN;
+    const refresh = ivMin;
+    ivAcc = 0; ivN = 0; ivMin = Infinity;
+    if (timer) {
+      gpuMs = gpuAcc / gpuN;
+      gpuAcc = 0; gpuN = 0;
+      if (gpuMs > GPU_HIGH || (gpuMs < GPU_LOW && quality < 1)) {
+        // 描く画素の数は quality の 2 乗に比例する
+        const changed = setQuality(quality * Math.min(1.25, Math.sqrt(GPU_AIM / gpuMs)));
+        if (!changed && quality <= Q_MIN && gpuMs > GPU_HIGH * 1.6) lighten();
+      }
+      return;
+    }
+    // フレームの間隔で判断する。いちばん短い間隔を画面の書き換え間隔とみなす（30fps に抑えられた端末を重いと取り違えない）
+    if (ivAvg > refresh * 1.35 && ivAvg > 20) {
+      if (!setQuality(quality * 0.85) && quality <= Q_MIN && ivAvg > refresh * 2) lighten();
+    } else if (ivAvg < refresh * 1.1 && quality < 1) {
+      setQuality(quality / 0.85);
+    }
+  }
 
   function quad() { gl.drawArrays(gl.TRIANGLES, 0, 3); }
 
@@ -953,6 +1016,9 @@ export function createOcean(canvas, opts) {
     gl.bindVertexArray(vao);
     gl.disable(gl.BLEND);
     gl.viewport(0, 0, simW, simH);
+    frameNo++;
+    const query = timer && frameNo % 3 === 0 && queries.length < 6 ? gl.createQuery() : null;
+    if (query) gl.beginQuery(timer.TIME_ELAPSED_EXT, query);
 
     const scroll = opts.getScroll();
     if (!fish.length) seedFish();
@@ -1014,24 +1080,11 @@ export function createOcean(canvas, opts) {
     gl.uniform4fv(L.uWaveA, waveA);
     gl.uniform2fv(L.uWaveB, waveB);
     quad();
-
-    // 重いときは描画解像度を下げる
-    if (dtMs < 100) {
-      frameAcc += dtMs;
-      frameCount++;
-      if (frameCount >= 60) {
-        const avg = frameAcc / frameCount;
-        frameAcc = 0; frameCount = 0;
-        lastAvg = avg;
-        if (avg > 22 && quality > 0.45) {
-          quality *= 0.8;
-          requestResize();
-          if (quality <= 0.45) document.documentElement.classList.add('low-fx');
-        } else if (avg > 28 && quality <= 0.45) {
-          lighten();
-        }
-      }
+    if (query) {
+      gl.endQuery(timer.TIME_ELAPSED_EXT);
+      queries.push(query);
     }
+    tune(now, dtMs);
   }
 
   canvas.addEventListener('webglcontextlost', (e) => {
@@ -1078,7 +1131,7 @@ export function createOcean(canvas, opts) {
         gpu: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
         canvas: `${canvas.width}x${canvas.height}`,
         quality: quality.toFixed(2),
-        frameMs: lastAvg.toFixed(1),
+        load: timer ? `GPU ${gpuMs.toFixed(1)}ms` : `フレーム ${ivAvg.toFixed(1)}ms`,
         lost,
         errors: errors.join(' / '),
       };

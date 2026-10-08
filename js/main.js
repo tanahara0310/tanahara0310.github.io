@@ -63,7 +63,7 @@ if (new URLSearchParams(window.location.search).has('debug')) {
     box.textContent = st
       ? `海: ${st.level}${st.lost ? '（止まった）' : ''}
 GPU: ${st.gpu}
-描画: ${st.canvas}・品質 ${st.quality}・${st.frameMs}ms/フレーム${st.errors ? `
+描画: ${st.canvas}・品質 ${st.quality}・${st.load}${st.errors ? `
 失敗: ${st.errors}` : ''}`
       : `海: 描けない（${oceanError || '理由不明'}）`;
   };

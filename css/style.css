@@ -87,9 +87,6 @@ main,
   -webkit-backdrop-filter: blur(14px) saturate(1.3);
   backdrop-filter: blur(14px) saturate(1.3);
 }
-.low-fx .glass,
-.low-fx .page,
-.low-fx .wcard a { background: var(--glass-hi); -webkit-backdrop-filter: none; backdrop-filter: none; }
 
 .btn {
   display: inline-flex;
